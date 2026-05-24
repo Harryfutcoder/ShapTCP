@@ -17,8 +17,13 @@ Goal: evaluate the core algorithm where the test-fault matrix is explicit.
 
 Priority:
 
-1. OCP, if the artifact exposes test/mutant/fault matrices cleanly.
-2. Defects4J or SIR if we can construct `test -> bug/mutant` matrices.
+1. SIR small subjects, if the downloaded object packages expose fault or
+   coverage matrices cleanly.
+2. OCP, first as a coverage-matrix artifact and only as a fault/mutant matrix
+   benchmark after the raw matrix mapping is confirmed.
+3. Defects4J small projects, after a JDK11/Docker environment is available and
+   after we decide whether to use triggering tests, coverage, or mutation as the
+   matrix source.
 
 Baselines for this stage:
 
@@ -44,9 +49,10 @@ Goal: move from explicit matrices to real CI logs.
 
 Priority:
 
-1. TCPFramework adapter.
+1. TCPFramework adapter for RTPTorrent-style CI histories and combinator
+   baselines.
 2. RETECS / tp_rl failure-log adapters.
-3. TCP-CI feature-rich experiments.
+3. TCP-CI feature-rich experiments for risk-aware ShapTCP variants.
 
 Key added work:
 

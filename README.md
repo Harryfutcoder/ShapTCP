@@ -45,6 +45,7 @@ tests/
   test_*.py           # unit tests
 docs/
   roadmap.md          # research and benchmark roadmap
+  benchmark_audit.md  # verified benchmark/resource notes
 ```
 
 ## Quick Start
@@ -59,8 +60,10 @@ Expected status right now: unit tests pass and synthetic scenarios run locally.
 ## Research Roadmap
 
 1. Validate Matrix ShapTCP on synthetic stress cases.
-2. Connect a public coverage/fault matrix benchmark, preferably OCP first.
-3. Add Defects4J/SIR adapters if matrix extraction is tractable.
+2. Confirm a public matrix benchmark, preferably SIR small subjects first, then
+   OCP as a coverage-matrix artifact.
+3. Add Defects4J adapters after JDK11/Docker setup and after the matrix source is
+   fixed.
 4. Add TCPFramework adapter after the matrix version is stable.
 5. Only then add broader baselines such as RETECS, tp_rl, DeepOrder, TCP-CI,
    and AutoTCP.
