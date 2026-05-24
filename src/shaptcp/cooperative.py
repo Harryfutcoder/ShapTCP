@@ -7,9 +7,10 @@ mutants, bug ids, or other root-cause proxies.
 
 from __future__ import annotations
 
-import random
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
+
+from .baselines import additional_coverage_order, random_order, total_coverage_order
 
 from .types import FaultId, TestId
 
@@ -193,52 +194,6 @@ def shaptcp_order(
         )
 
     return OrderResult(order=tuple(order), static_scores=static_scores, traces=tuple(traces))
-
-
-def additional_coverage_order(
-    test_to_faults: Mapping[TestId, Iterable[FaultId]],
-    *,
-    budget_count: int | None = None,
-) -> tuple[TestId, ...]:
-    """Classic additional coverage baseline."""
-
-    normalized = normalize_matrix(test_to_faults)
-    if budget_count is None:
-        budget_count = len(normalized)
-
-    remaining_tests = set(normalized)
-    covered_faults: set[FaultId] = set()
-    order: list[TestId] = []
-
-    while remaining_tests and len(order) < budget_count:
-        best = max(
-            remaining_tests,
-            key=lambda test: (len(normalized[test] - covered_faults), len(normalized[test]), _reverse_sort_key(test)),
-        )
-        order.append(best)
-        remaining_tests.remove(best)
-        covered_faults.update(normalized[best])
-    return tuple(order)
-
-
-def total_coverage_order(test_to_faults: Mapping[TestId, Iterable[FaultId]]) -> tuple[TestId, ...]:
-    """Sort tests by total fault coverage count."""
-
-    normalized = normalize_matrix(test_to_faults)
-    return tuple(sorted(normalized, key=lambda test: (-len(normalized[test]), str(test))))
-
-
-def random_order(
-    test_to_faults: Mapping[TestId, Iterable[FaultId]],
-    *,
-    seed: int | None = None,
-) -> tuple[TestId, ...]:
-    """Random baseline with a deterministic seed option."""
-
-    rng = random.Random(seed)
-    tests = list(test_to_faults)
-    rng.shuffle(tests)
-    return tuple(tests)
 
 
 def _reverse_sort_key(value: TestId) -> str:

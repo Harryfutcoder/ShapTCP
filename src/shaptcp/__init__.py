@@ -1,5 +1,6 @@
 """ShapTCP research prototype."""
 
+from .baselines import cost_aware_additional_coverage_order, shortest_duration_order
 from .cooperative import (
     OrderResult,
     StepTrace,
@@ -29,12 +30,14 @@ __all__ = [
     "apfdc",
     "apply_fault_clusters",
     "cluster_faults_by_cofailure",
+    "cost_aware_additional_coverage_order",
     "fault_recall_at_k",
     "load_binary_incidence_matrix",
     "random_order",
     "rare_fault_recall_at_k",
     "redundancy_at_k",
     "shaptcp_order",
+    "shortest_duration_order",
     "static_shapley_scores",
     "time_to_first_fault",
     "total_coverage_order",

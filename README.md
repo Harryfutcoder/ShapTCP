@@ -35,6 +35,7 @@ tests that cover scarce faults and reduces redundant coverage pressure.
 
 ```text
 src/shaptcp/
+  baselines.py        # matrix baselines for first-stage experiments
   cooperative.py      # ShapTCP ordering and simple baselines
   metrics.py          # APFD/APFDc/recall/redundancy metrics
   io.py               # lightweight binary incidence matrix loader
@@ -42,11 +43,13 @@ src/shaptcp/
   synthetic.py        # small stress scenarios
 scripts/
   run_synthetic.py    # sanity benchmark runner
+  run_matrix_file.py  # light matrix benchmark runner
 tests/
   test_*.py           # unit tests
 docs/
   roadmap.md          # research and benchmark roadmap
   benchmark_audit.md  # verified benchmark/resource notes
+  sota_baselines.md   # paper-to-code baseline and benchmark map
 ```
 
 ## Quick Start
