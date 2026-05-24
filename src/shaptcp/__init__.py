@@ -10,6 +10,7 @@ from .cooperative import (
     total_coverage_order,
 )
 from .fault_clustering import apply_fault_clusters, cluster_faults_by_cofailure
+from .io import MatrixDataset, load_binary_incidence_matrix
 from .metrics import (
     apfd,
     apfdc,
@@ -21,6 +22,7 @@ from .metrics import (
 
 __all__ = [
     "OrderResult",
+    "MatrixDataset",
     "StepTrace",
     "additional_coverage_order",
     "apfd",
@@ -28,6 +30,7 @@ __all__ = [
     "apply_fault_clusters",
     "cluster_faults_by_cofailure",
     "fault_recall_at_k",
+    "load_binary_incidence_matrix",
     "random_order",
     "rare_fault_recall_at_k",
     "redundancy_at_k",

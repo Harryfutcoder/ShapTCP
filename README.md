@@ -37,6 +37,7 @@ tests that cover scarce faults and reduces redundant coverage pressure.
 src/shaptcp/
   cooperative.py      # ShapTCP ordering and simple baselines
   metrics.py          # APFD/APFDc/recall/redundancy metrics
+  io.py               # lightweight binary incidence matrix loader
   fault_clustering.py # co-failure clustering for failure-signature dedup
   synthetic.py        # small stress scenarios
 scripts/
