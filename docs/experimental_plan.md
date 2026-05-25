@@ -50,10 +50,12 @@ Tasks:
 
 1. Record exact paper, repo, dataset, and environment source for each baseline in
    [sota_baselines.md](sota_baselines.md).
-2. For every benchmark, store a local `SOURCE_NOTES.md` with download URL,
+2. Keep [theory_review.md](theory_review.md) aligned with the code before
+   claiming a theorem, guarantee, or benchmark result.
+3. For every benchmark, store a local `SOURCE_NOTES.md` with download URL,
    checksum if available, license/access note, and observed file structure.
-3. Pin the local ShapTCP commit hash for every reported run.
-4. Separate `verified fact`, `adapter decision`, and `paper interpretation` in
+4. Pin the local ShapTCP commit hash for every reported run.
+5. Separate `verified fact`, `adapter decision`, and `paper interpretation` in
    all notes.
 
 Exit criteria:

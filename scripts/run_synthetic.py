@@ -10,6 +10,7 @@ from shaptcp import (
     rare_fault_recall_at_k,
     redundancy_at_k,
     shaptcp_order,
+    static_shapley_order,
 )
 from shaptcp.synthetic import all_scenarios
 
@@ -20,6 +21,7 @@ def main() -> None:
         print(scenario.description)
 
         add_order = additional_coverage_order(scenario.test_to_faults)
+        static_order = static_shapley_order(scenario.test_to_faults)
         shap_order = shaptcp_order(scenario.test_to_faults).order
         unique_order = shaptcp_order(scenario.test_to_faults, lexicographic_unique=True).order
         cost_order = shaptcp_order(
@@ -30,6 +32,7 @@ def main() -> None:
 
         for name, order in [
             ("additional", add_order),
+            ("static_shapley", static_order),
             ("shaptcp", shap_order),
             ("unique_shaptcp", unique_order),
             ("cost_shaptcp", cost_order),

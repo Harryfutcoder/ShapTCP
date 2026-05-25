@@ -48,6 +48,7 @@ tests/
   test_*.py           # unit tests
 docs/
   roadmap.md          # research and benchmark roadmap
+  theory_review.md    # compressed theory audit and claim boundaries
   benchmark_audit.md  # verified benchmark/resource notes
   sota_baselines.md   # paper-to-code baseline and benchmark map
   experimental_plan.md # staged experiment plan and claim boundaries
@@ -74,3 +75,5 @@ Expected status right now: unit tests pass and synthetic scenarios run locally.
    and AutoTCP.
 
 See [docs/roadmap.md](docs/roadmap.md) for the detailed plan.
+See [docs/theory_review.md](docs/theory_review.md) for the compressed theory
+audit and reviewer-facing claim boundaries.

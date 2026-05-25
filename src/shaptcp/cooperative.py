@@ -88,6 +88,21 @@ def static_shapley_scores(
     return scores
 
 
+def static_shapley_order(
+    test_to_faults: Mapping[TestId, Iterable[FaultId]],
+    *,
+    fault_weights: Mapping[FaultId, float] | None = None,
+) -> tuple[TestId, ...]:
+    """Order tests by static Shapley score without residual updates.
+
+    This is an ablation baseline. It isolates the attribution effect from the
+    residual/additional-coverage scheduling step used by ShapTCP.
+    """
+
+    scores = static_shapley_scores(test_to_faults, fault_weights=fault_weights)
+    return tuple(sorted(scores, key=lambda test: (-scores[test], str(test))))
+
+
 def shaptcp_order(
     test_to_faults: Mapping[TestId, Iterable[FaultId]],
     *,

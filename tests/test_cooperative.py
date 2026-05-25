@@ -7,6 +7,7 @@ from shaptcp import (
     rare_fault_recall_at_k,
     redundancy_at_k,
     shaptcp_order,
+    static_shapley_order,
     static_shapley_scores,
 )
 
@@ -57,6 +58,16 @@ class CooperativeTests(unittest.TestCase):
         }
 
         self.assertEqual(additional_coverage_order(matrix), ("A", "C", "B"))
+
+    def test_static_shapley_order_is_non_residual_ablation(self):
+        matrix = {
+            "A": {"f1", "f2"},
+            "B": {"f1", "f2"},
+            "C": {"f3"},
+        }
+
+        self.assertEqual(static_shapley_order(matrix), ("A", "B", "C"))
+        self.assertEqual(shaptcp_order(matrix).order, ("A", "C", "B"))
 
     def test_count_budget_limits_order(self):
         matrix = {"A": {"f1"}, "B": {"f2"}, "C": {"f3"}}

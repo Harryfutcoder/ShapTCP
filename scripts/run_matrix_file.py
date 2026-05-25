@@ -17,6 +17,7 @@ from shaptcp import (
     redundancy_at_k,
     shaptcp_order,
     shortest_duration_order,
+    static_shapley_order,
     total_coverage_order,
 )
 
@@ -36,6 +37,7 @@ def main() -> None:
     orders = {
         "total": total_coverage_order(dataset.test_to_faults),
         "additional": additional_coverage_order(dataset.test_to_faults, budget_count=args.budget_count),
+        "static_shapley": _clip(static_shapley_order(dataset.test_to_faults), args.budget_count),
         "shaptcp": shaptcp_order(
             dataset.test_to_faults,
             budget_count=args.budget_count,
@@ -94,6 +96,12 @@ def _fmt(value: float) -> str:
     if value != value:
         return "nan"
     return f"{value:.6f}"
+
+
+def _clip(order: tuple[str, ...], budget_count: int | None) -> tuple[str, ...]:
+    if budget_count is None:
+        return order
+    return order[:budget_count]
 
 
 if __name__ == "__main__":

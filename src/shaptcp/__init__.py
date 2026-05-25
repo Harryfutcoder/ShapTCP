@@ -7,6 +7,7 @@ from .cooperative import (
     additional_coverage_order,
     random_order,
     shaptcp_order,
+    static_shapley_order,
     static_shapley_scores,
     total_coverage_order,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "redundancy_at_k",
     "shaptcp_order",
     "shortest_duration_order",
+    "static_shapley_order",
     "static_shapley_scores",
     "time_to_first_fault",
     "total_coverage_order",
