@@ -50,6 +50,7 @@ docs/
   roadmap.md          # research and benchmark roadmap
   benchmark_audit.md  # verified benchmark/resource notes
   sota_baselines.md   # paper-to-code baseline and benchmark map
+  experimental_plan.md # staged experiment plan and claim boundaries
 ```
 
 ## Quick Start

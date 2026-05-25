@@ -1,5 +1,8 @@
 # ShapTCP Roadmap
 
+For the detailed staged experiment plan, see
+[experimental_plan.md](experimental_plan.md).
+
 ## Stage 0: Algorithm Sanity
 
 Goal: prove the code matches the defensible theory.
