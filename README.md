@@ -43,12 +43,23 @@ src/shaptcp/
   synthetic.py        # small stress scenarios
 scripts/
   run_synthetic.py    # sanity benchmark runner
+  run_synthetic_suite.py # multi-seed generated sanity comparison
   run_matrix_file.py  # light matrix benchmark runner
+  audit_benchmarks.py # source availability audit
+  discover_matrices.py # row-wise 0/1 matrix discovery
+  run_benchmark_matrix.py # manifest-compatible matrix runner
+  build_defects4j_metadata_matrix.py # metadata-only trigger matrix adapter
+  build_defects4j_trigger_matrix.py # Defects4J checkout/export adapter
 tests/
   test_*.py           # unit tests
+benchmarks/
+  manifest.json       # benchmark source registry and status fields
+  run_config_template.json # per-run metadata template
+  source_notes/       # source-specific audit notes
 docs/
   roadmap.md          # research and benchmark roadmap
   theory_review.md    # compressed theory audit and claim boundaries
+  full_benchmark_pipeline.md # development-machine benchmark pipeline
   benchmark_audit.md  # verified benchmark/resource notes
   sota_baselines.md   # paper-to-code baseline and benchmark map
   experimental_plan.md # staged experiment plan and claim boundaries
@@ -60,6 +71,7 @@ docs/
 PYTHONPATH=src python3 -m unittest discover -s tests
 PYTHONPATH=src python3 scripts/run_synthetic.py
 PYTHONPATH=src python3 scripts/run_synthetic_suite.py
+PYTHONPATH=src python3 scripts/audit_benchmarks.py
 ```
 
 Expected status right now: unit tests pass and synthetic scenarios run locally.
@@ -78,3 +90,5 @@ Expected status right now: unit tests pass and synthetic scenarios run locally.
 See [docs/roadmap.md](docs/roadmap.md) for the detailed plan.
 See [docs/theory_review.md](docs/theory_review.md) for the compressed theory
 audit and reviewer-facing claim boundaries.
+See [docs/full_benchmark_pipeline.md](docs/full_benchmark_pipeline.md) for the
+development-machine benchmark integration plan.

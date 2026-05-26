@@ -52,10 +52,12 @@ Tasks:
    [sota_baselines.md](sota_baselines.md).
 2. Keep [theory_review.md](theory_review.md) aligned with the code before
    claiming a theorem, guarantee, or benchmark result.
-3. For every benchmark, store a local `SOURCE_NOTES.md` with download URL,
+3. Keep [full_benchmark_pipeline.md](full_benchmark_pipeline.md) aligned with
+   the benchmark manifest and adapter scripts.
+4. For every benchmark, store a local `SOURCE_NOTES.md` with download URL,
    checksum if available, license/access note, and observed file structure.
-4. Pin the local ShapTCP commit hash for every reported run.
-5. Separate `verified fact`, `adapter decision`, and `paper interpretation` in
+5. Pin the local ShapTCP commit hash for every reported run.
+6. Separate `verified fact`, `adapter decision`, and `paper interpretation` in
    all notes.
 
 Exit criteria:

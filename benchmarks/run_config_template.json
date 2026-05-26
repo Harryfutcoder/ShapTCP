@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "benchmark-subject-smoke",
+  "evidence_level": "pipeline_validation",
+  "claim_scope": "adapter_smoke",
+  "source_status": "source_audited",
+  "matrix_status": "verified",
+  "result_status": "local_smoke_only",
+  "source": {
+    "benchmark": "OCP|FAST|SIR|Defects4J",
+    "artifact_url": "",
+    "artifact_commit_or_version": "",
+    "local_root_env": "",
+    "license_access": ""
+  },
+  "subject": {
+    "project": "",
+    "version": "",
+    "bug_ids": [],
+    "candidate_tests": "benchmark_native"
+  },
+  "matrix": {
+    "path": "data/processed/.../matrix.txt",
+    "test_ids_path": "data/processed/.../matrix.txt.tests",
+    "entity_ids_path": "data/processed/.../matrix.txt.entities",
+    "column_semantics": "fault|mutant|statement|branch|method|ci_proxy",
+    "ground_truth_level": "true_fault|mutant_proxy|coverage_only|ci_proxy",
+    "verified_by": "benchmarks/source_notes/<benchmark>.md"
+  },
+  "protocol": {
+    "split": "none|temporal|train_test",
+    "leakage_guard": "benchmark_native",
+    "k": 20,
+    "budget_count": null,
+    "random_seeds": 30
+  },
+  "methods": [
+    "random",
+    "total",
+    "additional",
+    "static_shapley",
+    "shaptcp"
+  ],
+  "metrics": [
+    "apfd",
+    "apfdc",
+    "fault_recall_at_k",
+    "rare_fault_recall_at_k",
+    "redundancy_at_k"
+  ],
+  "outputs": {
+    "results_csv": "data/processed/.../results.csv"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "pipeline validation on a confirmed matrix"
+    ],
+    "disallowed": [
+      "SOTA claim",
+      "APFD guarantee",
+      "treating coverage columns as true faults"
+    ]
+  }
+}
