@@ -4,6 +4,10 @@ This plan is the staged execution path for ShapTCP. It is intentionally
 conservative: each stage has an accuracy gate, a compute boundary, and a clear
 claim boundary before moving to the next stage.
 
+For the paper-level experiment matrix with concrete baselines, metrics,
+datasets, environments, and decision gates, see
+[experiment_design.md](experiment_design.md).
+
 ## Project Positioning
 
 ShapTCP is a matrix-first TCP method:
