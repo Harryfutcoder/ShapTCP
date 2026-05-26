@@ -59,6 +59,7 @@ docs/
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests
 PYTHONPATH=src python3 scripts/run_synthetic.py
+PYTHONPATH=src python3 scripts/run_synthetic_suite.py
 ```
 
 Expected status right now: unit tests pass and synthetic scenarios run locally.

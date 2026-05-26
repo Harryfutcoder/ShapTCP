@@ -69,6 +69,17 @@ Exit criteria:
 
 Goal: validate the evaluation pipeline on one small binary matrix.
 
+Before external data, use the lightweight generated suite only as a sanity
+check:
+
+```bash
+PYTHONPATH=src python3 scripts/run_synthetic_suite.py --seeds 50
+```
+
+This generated suite is not paper evidence. It is meant to verify that strong
+classical baselines, static Shapley ranking, residual ShapTCP, and cost-aware
+variants behave as expected before any benchmark claim.
+
 Preferred input:
 
 1. SIR small subject matrix, if available.
