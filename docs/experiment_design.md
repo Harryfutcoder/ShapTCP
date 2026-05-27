@@ -36,6 +36,7 @@ Primary links:
 - Rothermel et al. 2001: https://digitalcommons.unl.edu/csearticles/9/
 - TCPFramework survey/code: https://github.com/LechMadeyski/MSc25TomaszChojnacki
 - FAST ICSE 2018: https://conf.researchr.org/details/icse-2018/icse-2018-Technical-Papers/84/FAST-Approaches-to-Scalable-Similarity-based-Test-Case-Prioritization
+- FAST artifact: https://github.com/icse18-fast/FAST
 - OCP artifact: https://github.com/QuanjunZhang/OCP
 - SIR: https://sir.csc.ncsu.edu/portal/index.php
 - Defects4J: https://github.com/rjust/defects4j
@@ -257,7 +258,7 @@ Baseline families:
 | Coverage greedy | total, additional | Rothermel et al.; local implementation |
 | Diversity/randomized | ART-F, ART-D | Jiang et al.; FAST artifact where available |
 | Search-based | GA/search-based TCP | Li et al.; FAST/OCP artifact where available |
-| Similarity-based | FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all | FAST ICSE 2018 artifact |
+| Similarity-based | FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all | FAST ICSE 2018 artifact, `icse18-fast/FAST` |
 | OCP | OCP and OCP-related comparators | OCP artifact |
 
 Datasets:

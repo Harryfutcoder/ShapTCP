@@ -61,6 +61,7 @@ docs/
   theory_review.md    # compressed theory audit and claim boundaries
   full_benchmark_pipeline.md # development-machine benchmark pipeline
   experiment_design.md # paper-level RQs, baselines, metrics, environments
+  paper_experiment_checklist.md # paper experiment artifact/run checklist
   benchmark_audit.md  # verified benchmark/resource notes
   sota_baselines.md   # paper-to-code baseline and benchmark map
   experimental_plan.md # staged experiment plan and claim boundaries
@@ -95,3 +96,5 @@ See [docs/full_benchmark_pipeline.md](docs/full_benchmark_pipeline.md) for the
 development-machine benchmark integration plan.
 See [docs/experiment_design.md](docs/experiment_design.md) for the paper-level
 experiment matrix.
+See [docs/paper_experiment_checklist.md](docs/paper_experiment_checklist.md)
+for the exact paper experiment artifact/run checklist.

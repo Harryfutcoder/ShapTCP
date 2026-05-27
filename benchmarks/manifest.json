@@ -27,7 +27,7 @@
       "id": "fast",
       "name": "FAST artifact",
       "paper_scope": "similarity/diversity TCP artifact with fault matrices and coverage representations",
-      "artifact_url": "to-be-verified-before-paper-use",
+      "artifact_url": "https://github.com/icse18-fast/FAST",
       "root_env": "SHAPTCP_FAST_ROOT",
       "default_root": "data/raw/FAST",
       "known_local_roots": [],
