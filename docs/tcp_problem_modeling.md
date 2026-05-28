@@ -72,6 +72,26 @@ H           history visible before the current prioritization point
 M           test-entity matrix, M[i, f] in {0, 1}
 ```
 
+For ShapTCP, a reportable experimental instance should be recorded as:
+
+```text
+I = (T, E, M, c, w, B, H, sigma, protocol)
+
+T         candidate tests, fixed before prioritization
+E         entities: faults, bugs, mutants, coverage entities, or CI proxies
+M[i,e]    binary relation between test i and entity e
+c_i       optional execution duration/cost of test i
+w_e       non-negative entity weight; default 1
+B         optional count or time budget
+H         history visible before ordering, empty for pure matrix experiments
+sigma     semantic label for E
+protocol  split, leakage guard, seeds, metric formula, and tie-breaking policy
+```
+
+The output is an ordered sequence `pi`. If a budget is used, the method may
+execute only a prefix of `pi`, but the induced order and the budget rule must
+still be documented.
+
 The entity set `F` is not always true faults:
 
 | Column semantics | Meaning | Valid claim type |
@@ -83,6 +103,15 @@ The entity set `F` is not always true faults:
 
 This distinction is a construct-validity requirement. A coverage matrix should
 not be described as a true fault-detection benchmark.
+
+Metric labels in the paper must follow the entity semantics:
+
+| Entity semantics | Safe metric wording |
+|---|---|
+| true fault / true bug | APFD, APFDc, NAPFD, fault recall |
+| mutant | mutant APFD / APFD over mutants, mutation recall |
+| coverage entity | entity-rank score, coverage recall, redundancy; not true APFD claim |
+| CI proxy | proxy feedback metric, clustered-failure recall; not root-cause claim |
 
 ## Regression Testing Task Boundaries
 
@@ -180,6 +209,17 @@ use NAPFD, recall@k, time-budget recall, or benchmark-native CI metrics.
 Because NAPFD and CI metrics have multiple variants in the literature, a run
 must record the exact formula used by the benchmark or implementation.
 
+A common NAPFD form is:
+
+```text
+NAPFD(pi) = p - (sum_f TF_f(pi)) / (n * m) + p / (2n)
+```
+
+where `p` is the fraction of all identifiable faults detected by the executed
+order/prefix. In this convention, `TF_f` is set to zero for undetected faults.
+Because CI papers sometimes use failing-test ranks instead of explicit fault
+ids, ShapTCP runs must record which convention is used.
+
 ### Prefix-Coverage Surrogate
 
 Many TCP techniques optimize a prefix-level surrogate:
@@ -194,6 +234,15 @@ the standard `(1 - 1/e)` guarantee for fixed weighted maximum coverage under a
 cardinality budget. This is a subset/prefix coverage guarantee, not an APFD
 guarantee over the entire sequence.
 
+For ShapTCP, this surrogate is:
+
+```text
+g_shap(S) = sum_{e covered by S} w_e / |T_e|
+```
+
+where `T_e = {i in T : M[i,e] = 1}`. Greedy ShapTCP selects the largest
+remaining marginal gain of `g_shap`, optionally divided by cost.
+
 ## Metric Definitions and Use
 
 | Metric | Optimizes/Measures | Use When | Main Risk |
@@ -206,6 +255,15 @@ guarantee over the entire sequence.
 | redundancy@k | overlap/repeated coverage in first `k` tests | diversity/non-redundancy matters | not a fault-detection metric alone |
 | TTFF | time/rank to first failing test | CI feedback | only meaningful with failing builds |
 | NTR/ATR/rAPFDc | CI-history ranking/cost metrics | TCPFramework-like CI studies | formulas must follow benchmark implementation |
+
+Metric selection rules:
+
+- Full-suite, true-fault order: APFD is valid.
+- Full-suite with verified durations: APFDc is valid.
+- Partial count/time budget: prefer NAPFD, recall@k, or time-budget recall.
+- Coverage-only matrix: report entity-level metrics, not fault-detection
+  claims.
+- CI failure logs: report benchmark-native CI metrics and proxy semantics.
 
 ## Baseline Modeling
 
@@ -276,6 +334,15 @@ score_i(S) / c_i^alpha
 
 where `alpha=0` is pure ShapTCP and `alpha=1` is score per unit cost.
 
+The implementation assumes:
+
+- binary deterministic entity detection/coverage;
+- non-negative entity weights;
+- fixed candidate tests for all methods in the same comparison;
+- no current-cycle or future information in `M` or `H`;
+- deterministic lexical tie-breaking unless a randomized method explicitly
+  declares seeds.
+
 This places ShapTCP between classic additional coverage and pure Shapley
 attribution:
 
@@ -315,7 +382,11 @@ ShapTCP is:
 ## Modeling Pitfalls to Avoid
 
 - Do not call coverage entities faults.
+- Do not report an APFD table over coverage entities without changing the
+  metric wording and claim boundary.
 - Do not compare APFDc without the same real duration source.
+- Do not compute APFD/APFDc for budgeted prefixes and present them as classic
+  full-suite APFD/APFDc.
 - Do not mix full-suite APFD with partial-budget NAPFD without saying so.
 - Do not let a baseline see future failures, post-cycle coverage, or a larger
   candidate test set.

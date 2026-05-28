@@ -17,6 +17,42 @@ it is marked as such.
 - Do not treat Defects4J, SIR, OCP, RTPTorrent, or the Yaraghi dataset as the
   same benchmark type. They answer different experimental questions.
 
+## Comparison Tiers
+
+Not every published TCP method belongs in the same comparison table. Use this
+tiering before adding a baseline.
+
+| Tier | Methods | Same Table As ShapTCP? | Required Alignment |
+|---|---|---|---|
+| T0 controls | random, original order | yes | same candidate tests and metric |
+| T1 matrix heuristics | total, additional, static Shapley, cost-aware variants | yes, main table | same matrix, same budget, same durations if cost-aware |
+| T2 matrix SOTA families | FAST, ART, GA/search, OCP artifact methods | yes, after adapter audit | same representation and benchmark-native protocol |
+| T3 generated real-bug matrices | Defects4J trigger/coverage/mutation | yes, separate Defects4J table | generated matrix protocol and entity semantics |
+| T4 CI-history/combinators | TCPFramework, RETECS, tp_rl, DeepOrder, TCP-CI, AutoTCP | not first-paper main table | temporal split, same visible history/features, benchmark-native metrics |
+
+If a method needs data ShapTCP does not receive, either give ShapTCP the same
+data through an adapter or move the method to a separate experiment.
+
+## Required Baseline Metadata
+
+Every baseline row in a report should record:
+
+```text
+method name
+paper anchor
+implementation source or local implementation note
+input representation
+candidate test set
+budget policy
+metric formula
+random seeds or deterministic tie-breaking
+environment profile
+known incompatibilities
+```
+
+This prevents a "baseline name" from hiding a different benchmark, different
+candidate tests, or future information.
+
 ## Stage 1: Matrix Baselines
 
 These are the first baselines to run against ShapTCP because they share the same
@@ -55,15 +91,25 @@ They are not direct matrix baselines.
 
 ## Benchmarks
 
-| Benchmark | Source | Direct data shape | Setup status | First useful ShapTCP task |
-|---|---|---|---|---|
-| SIR | Software-artifact Infrastructure Repository; the EMSE SIR paper describes tooling including `gen-fault-matrix` | object-dependent tar/gz packages; small subjects may expose or generate fault matrices | requires license/download and object-specific inspection; exact package structure still unverified locally | inspect Siemens/tcas/schedule/print_tokens packages for ready matrix files or scripts. |
-| OCP | `QuanjunZhang/OCP`, JSS 2022 artifact | code, subjects, tests, C mutants, APFD/order/time results; Java prioritizers read coverage matrix files | public artifact inspected through README/code; raw matrix mapping not yet confirmed | adapt row-wise coverage matrix if available, then compare ShapTCP with OCP baselines. |
-| FAST | `icse18-fast/FAST`, ICSE 2018 artifact | input data includes fault matrix, coverage information, and black-box representation for listed subjects | needs old Python/scipy environment | use as second Stage-1 comparator for similarity/diversity, ART, and GA-style baselines. |
-| Defects4J | `rjust/defects4j` | real Java bugs plus tooling, not a direct matrix | needs Java 11, Git, svn, Perl, cpanm, timezone `America/Los_Angeles` | start with small projects and export `tests.trigger`; mutation matrix later. |
-| RTPTorrent/TCPFramework | RTPTorrent Zenodo + TravisTorrent + TCPFramework | CI execution records and project repos | generated dataset >6GB and not shipped | second-stage CI-history adapter. |
-| Yaraghi 25-project TCP-CI | Zenodo `10.5281/zenodo.6415365` | feature-rich CI dataset; main dataset is about 237MB and full dataset is about 16GB | requires dataset download; TCP-CI extraction additionally needs Understand | later risk-aware ShapTCP and learning-to-rank baselines. |
-| RETECS/tp_rl datasets | bundled in their repositories | CI cycles with history features | old Python/RL environments | later RL comparison. |
+| Benchmark | Type | Source | Direct data shape | Setup status | First useful ShapTCP task |
+|---|---|---|---|---|---|
+| SIR | matrix/generated fault benchmark | Software-artifact Infrastructure Repository; the EMSE SIR paper describes tooling including `gen-fault-matrix` | object-dependent tar/gz packages; small subjects may expose or generate fault matrices | requires license/download and object-specific inspection; exact package structure still unverified locally | inspect Siemens/tcas/schedule/print_tokens packages for ready matrix files or scripts. |
+| OCP | coverage/mutation artifact | `QuanjunZhang/OCP`, JSS 2022 artifact | code, subjects, tests, C mutants, APFD/order/time results; Java prioritizers read coverage matrix files | public artifact inspected through README/code; raw matrix mapping not yet confirmed | adapt row-wise coverage matrix if available, then compare ShapTCP with OCP baselines. |
+| FAST | similarity/diversity artifact | `icse18-fast/FAST`, ICSE 2018 artifact | input data includes fault matrix, coverage information, and black-box representation for listed subjects | needs old Python/scipy environment | use as second Stage-1 comparator for similarity/diversity, ART, and GA-style baselines. |
+| Defects4J | generated real-bug benchmark | `rjust/defects4j` | real Java bugs plus tooling, not a direct matrix | needs Java 11, Git, svn, Perl, cpanm, timezone `America/Los_Angeles` | start with small projects and export `tests.trigger`; mutation matrix later. |
+| RTPTorrent/TCPFramework | CI-history benchmark | RTPTorrent Zenodo + TravisTorrent + TCPFramework | CI execution records and project repos | generated dataset >6GB and not shipped | second-stage CI-history adapter. |
+| Yaraghi 25-project TCP-CI | feature-rich CI benchmark | Zenodo `10.5281/zenodo.6415365` | feature-rich CI dataset; main dataset is about 237MB and full dataset is about 16GB | requires dataset download; TCP-CI extraction additionally needs Understand | later risk-aware ShapTCP and learning-to-rank baselines. |
+| RETECS/tp_rl datasets | RL CI-history benchmark | bundled in their repositories | CI cycles with history features | old Python/RL environments | later RL comparison. |
+
+Benchmark acceptance rule:
+
+- `matrix/generated fault benchmark`: eligible for the first ShapTCP paper after
+  semantics verification.
+- `coverage/mutation artifact`: eligible, but claims must say coverage or
+  mutation proxy unless true faults are verified.
+- `CI-history benchmark`: second-stage; requires temporal protocol.
+- `feature-rich CI benchmark`: not comparable to matrix ShapTCP until feature
+  visibility and training protocol are aligned.
 
 ## Minimum First Experiment
 
@@ -71,7 +117,9 @@ The first real experiment should be intentionally small:
 
 1. Load one confirmed row-wise binary matrix with `load_binary_incidence_matrix`.
 2. Run `random`, `total`, `additional`, `cost-aware additional`, `shortest duration`, `ShapTCP`, and `cost-aware ShapTCP`.
-3. Report `APFD`, `APFDc` when durations exist, `fault_recall_at_k`, `rare_fault_recall_at_k`, and `redundancy_at_k`.
+3. Report APFD only for verified fault/bug matrices, APFDc only when verified
+   durations exist, and otherwise report semantic-aware recall@k,
+   rare_recall@k, redundancy@k, and runtime.
 4. Do not claim SOTA from this smoke test. Use it to validate data plumbing and metric direction.
 
 ## Developer Machine Notes

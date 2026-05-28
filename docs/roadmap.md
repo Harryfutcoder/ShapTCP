@@ -13,6 +13,8 @@ Goal: prove the code matches the defensible theory.
 - Time-budget and count-budget execution.
 - Co-failure clustering for raw failure signature deduplication.
 - Metrics: APFD, APFDc, recall@k, rare-fault recall@k, redundancy@k.
+- APFD/APFDc are reported only when their assumptions match the matrix
+  semantics and budget; prefix runs use recall/NAPFD-style metrics.
 
 ## Stage 1: Matrix Benchmarks
 

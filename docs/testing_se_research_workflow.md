@@ -43,6 +43,7 @@ Required alignment:
 - candidate object is a permutation/order over test cases;
 - objective/evaluation is stated: APFD, APFDc, NAPFD, recall@k, rare_recall@k,
   redundancy@k, or benchmark-native CI metric;
+- formal instance `(T, E, M, c, w, B, H, sigma, protocol)` is identifiable;
 - target entities are labeled as faults, bugs, mutants, coverage entities, or
   CI proxies;
 - ShapTCP is described as optimizing residual Shapley-weighted coverage, not as
@@ -52,6 +53,7 @@ Stop conditions:
 
 - APFD is reported on non-fault entities without relabeling the claim;
 - APFDc is reported without verified durations;
+- budgeted prefixes are reported as classic full-suite APFD/APFDc;
 - coverage or CI-proxy columns are described as true faults;
 - the experiment only selects a subset and never defines the induced order.
 
@@ -293,7 +295,7 @@ Required:
 
 Primary comparisons:
 
-- `shaptcp` vs `additional` for APFD;
+- `shaptcp` vs `additional` for APFD when the matrix semantics permit it;
 - `shaptcp` vs `additional` for rare_recall@k;
 - `shaptcp` vs `additional` for redundancy@k;
 - `cost_shaptcp` vs `cost_additional` for APFDc/time-budget recall.

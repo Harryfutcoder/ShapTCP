@@ -58,6 +58,16 @@ The result table must include:
 - `result_status`;
 - verified `semantics`.
 
+Each reported run must also state:
+
+- candidate test set and whether it came from a selector;
+- row semantics, column semantics, and value semantics;
+- whether columns are true bugs/faults, mutants, coverage entities, or CI
+  proxies;
+- budget policy: full suite, count budget, or time budget;
+- metric formulas used for APFD/APFDc/NAPFD or benchmark-native CI metrics;
+- tie-breaking policy and random seeds.
+
 ## First Benchmark Order
 
 Run in this order unless a source is blocked:
@@ -267,11 +277,14 @@ Before any table goes into a paper:
 - source note exists under `benchmarks/source_notes/`;
 - raw data or artifact commit/version is recorded;
 - matrix row and column meanings are verified;
+- benchmark class is stated: matrix, generated real-bug, coverage/mutation
+  proxy, or CI-history;
 - result CSV includes `evidence_level` and `claim_scope`;
 - `additional` is included whenever ShapTCP is included;
 - random uses at least 30 seeds;
 - APFD is not overclaimed if only rare recall improves;
 - coverage-entity results are not described as true fault results;
+- partial-budget results are not reported as classic full-suite APFD/APFDc;
 - CI failure signatures are clustered or clearly labeled as proxies.
 
 ## First Week Target

@@ -18,6 +18,17 @@ method: Shapley-weighted additional coverage
 goal:   prioritize scarce, non-redundant fault/entity coverage early
 ```
 
+Every experiment should be described as a formal instance:
+
+```text
+(T, E, M, c, w, B, H, sigma, protocol)
+```
+
+where `T` is the candidate test set, `E` is the entity set, `M` is the binary
+test-entity relation, `c` is optional duration, `w` is optional non-negative
+entity weight, `B` is budget, `H` is visible history, `sigma` is entity
+semantics, and `protocol` fixes split, metric formula, seeds, and tie-breaking.
+
 The first paper claim should be narrow and defensible:
 
 > ShapTCP is a cooperative-game-derived scarcity weighting for additional
@@ -118,7 +129,8 @@ Baselines:
 
 Metrics:
 
-- `APFD`
+- `APFD`, only when the matrix columns are verified faults/bugs or are clearly
+  labeled proxies
 - `APFDc`, only if durations exist
 - `fault_recall_at_k`
 - `rare_fault_recall_at_k`
@@ -127,6 +139,10 @@ Metrics:
 Exit criteria:
 
 - All methods run on the same candidate test set and same matrix.
+- APFD is used only for full-order true fault/bug or clearly labeled proxy
+  results.
+- Prefix/budgeted results use recall@k, time-budget recall, or NAPFD with a
+  recorded formula.
 - Order length, covered entities, and first-detection positions are manually
   spot-checked for at least one small subject.
 - Results are treated as pipeline validation, not performance evidence.

@@ -77,6 +77,58 @@ weights. Therefore, ShapTCP's main mechanism-level outcomes are:
 
 APFD/APFDc superiority is an empirical question, not a theorem.
 
+## Formal Paper Scope
+
+The first paper should keep these layers separate:
+
+| Layer | Formal object | Paper use |
+|---|---|---|
+| Problem | permutation `pi` over candidate tests `T` | defines TCP task |
+| Data | matrix `M[i,e]` with semantic label for `e` | defines what can be claimed |
+| Method | greedy maximization of residual Shapley-weighted coverage | defines ShapTCP |
+| Evaluation | APFD/APFDc/NAPFD/recall/redundancy/runtime | validates the produced order |
+| Evidence | public benchmark + source note + run config | supports paper tables |
+
+Minimum method formalization:
+
+```text
+Input:
+  T = candidate tests
+  E = entities
+  M[i,e] in {0,1}
+  w_e >= 0, default 1
+  optional c_i > 0
+
+Define:
+  T_e = {i in T : M[i,e] = 1}
+  covered(S) = {e : exists i in S, M[i,e] = 1}
+  score_i(S) = sum_{e in F_i \ covered(S)} w_e / |T_e|
+
+Choose:
+  pi_t = argmax_{i notin S} score_i(S)
+```
+
+Cost-aware variant:
+
+```text
+pi_t = argmax score_i(S) / c_i^alpha
+```
+
+Use `alpha=0` for main ShapTCP and `alpha=1` only as the cost-aware variant.
+
+Metric eligibility:
+
+| Matrix semantics | Primary metrics | Forbidden wording |
+|---|---|---|
+| `fault` / `bug` | APFD, APFDc, NAPFD, fault recall, rare fault recall | none, if source is verified |
+| `mutant` | mutant APFD, mutation recall, rare mutant recall | true fault detection unless framed as proxy |
+| `statement` / `branch` / `method` | coverage/entity recall, redundancy, runtime | true APFD/fault-detection claim |
+| `ci_proxy` | benchmark-native CI metrics, clustered-proxy recall | root-cause/fault claim without clustering or mapping |
+
+If a budgeted prefix is used, do not report classic full-suite APFD/APFDc for
+that prefix. Use recall@k, time-budget recall, NAPFD with its exact formula, or
+the benchmark-native CI metric.
+
 ## Experiment 0: Mechanism Sanity
 
 Goal: verify that the implementation matches the corrected theory before using
@@ -99,7 +151,7 @@ Baselines:
 
 Metrics:
 
-- APFD;
+- synthetic entity APFD, for mechanism sanity only;
 - APFDc when synthetic durations exist;
 - recall@k;
 - rare_recall@k;
@@ -145,6 +197,7 @@ Datasets:
 Baselines:
 
 - `random`, at least 30 seeds;
+- `original`, if the benchmark provides a meaningful native order;
 - `total coverage`;
 - `additional coverage`;
 - `static_shapley`, ablation;
@@ -152,7 +205,8 @@ Baselines:
 
 Metrics:
 
-- APFD;
+- APFD only for verified true fault/bug matrices, or explicitly labeled
+  mutant/entity APFD for proxy matrices;
 - recall@k;
 - rare_recall@k with degree thresholds 1, 2, and 3;
 - redundancy@k;
@@ -172,10 +226,14 @@ Acceptance gate:
 - matrix columns must be labeled as `fault`, `bug`, `mutant`, `statement`,
   `branch`, `method`, or `ci_proxy`;
 - ShapTCP must be compared against `additional` on every subject.
+- all baselines must receive the same candidate tests and the same matrix;
+- deterministic baselines must use documented tie-breaking;
+- random baselines must report aggregate over seeds, not one lucky seed.
 
 Success criterion for the first paper:
 
-- APFD is statistically tied with, or not materially below, `additional`;
+- APFD or the appropriate semantic-aware rank metric is statistically tied with,
+  or not materially below, `additional`;
 - rare_recall@k and redundancy@k improve consistently;
 - runtime overhead is small relative to data preparation.
 
@@ -215,6 +273,7 @@ Baselines:
 Metrics:
 
 - APFDc;
+- NAPFD or recall under a time budget, when not all tests are executed;
 - time-budget recall at 10%, 25%, 50% budget;
 - rare_recall under time budget;
 - first failing/fault-revealing time;

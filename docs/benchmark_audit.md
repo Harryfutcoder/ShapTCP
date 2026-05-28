@@ -4,6 +4,22 @@ This file is the conservative execution map for ShapTCP experiments. It
 separates what is already verified from what still needs local reproduction.
 Artifact availability is not the same as ShapTCP benchmark evidence.
 
+## Evidence Classes
+
+Use these classes before deciding whether a dataset can appear in a paper table.
+
+| Class | Meaning | Allowed Claim |
+|---|---|---|
+| `pipeline_validation` | adapter or smoke matrix works, but not a public result | code plumbing only |
+| `verified_matrix` | rows, columns, and values are documented and source-audited | matrix-based TCP evidence |
+| `generated_bug_matrix` | benchmark tool generated a bug/fault matrix under recorded protocol | real-bug benchmark evidence |
+| `coverage_proxy` | columns are coverage entities | coverage/redundancy evidence, not true fault detection |
+| `mutation_proxy` | columns are mutants | mutation-proxy evidence |
+| `ci_history_proxy` | entities are failing tests or clustered failure signatures | CI feedback evidence, not root-cause proof |
+
+Every result should state its class through `evidence_level`, `claim_scope`,
+`matrix_status`, and `ground_truth_level`.
+
 ## Current Verified Status
 
 ShapTCP core is lightweight. On a synthetic sparse matrix with 1000 tests, 2000
@@ -34,7 +50,8 @@ algorithm; it is dataset reconstruction and baseline training.
 2. Build a minimal matrix loader for row-wise `0/1` coverage matrices.
 3. Run ShapTCP, cost-aware ShapTCP, random, total coverage, and additional
    coverage on one confirmed small subject.
-4. Report APFD, APFDc if durations exist, recall@k, rare-fault recall@k, and
+4. Report APFD only for true fault/bug matrices, APFDc only with verified
+   durations, and otherwise use semantic-aware entity recall, rare recall, and
    redundancy@k.
 5. Only after this passes, add OCP-specific and Defects4J-specific adapters.
 

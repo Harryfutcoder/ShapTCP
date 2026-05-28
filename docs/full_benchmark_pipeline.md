@@ -25,6 +25,17 @@ Every reported table must carry:
 - `result_status`;
 - verified column semantics.
 
+Every reported table must also be traceable to the formal instance:
+
+```text
+(T, E, M, c, w, B, H, sigma, protocol)
+```
+
+At minimum, record the candidate test set `T`, entity semantics `sigma`, matrix
+source `M`, budget `B`, duration source `c`, visible history `H`, and the exact
+metric formula. If any of these are unclear, the output is a smoke run rather
+than reportable evidence.
+
 ## Manifest
 
 Benchmark source metadata lives in:
@@ -221,6 +232,10 @@ Always include these first-stage baselines:
 Artifact-native baselines such as OCP, FAST variants, ART, GA, and search-based
 methods should be added only after the artifact's original matrix and metric
 protocol are confirmed.
+
+Do not add CI-history or learning baselines to a matrix table unless ShapTCP is
+given the same temporal history/features and the same evaluation cycles. They
+belong in a separate CI-history section by default.
 
 ## Stop Conditions
 

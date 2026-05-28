@@ -35,6 +35,14 @@ This is intentionally conservative. It uses fixed Shapley scarcity weights and
 a residual coverage filter. It does not claim a dynamic-degree Shapley theorem
 or an APFD approximation guarantee.
 
+Assumptions for this theory statement:
+
+- deterministic binary coverage/detection matrix;
+- non-negative entity weights;
+- fixed candidate test set;
+- entity semantics documented before evaluation;
+- no current/future-cycle information in history-based settings.
+
 ## Paper 1 Audit: Dynamic Degree Collapse
 
 The risky formulation is a "dynamic conditional Shapley" degree:
