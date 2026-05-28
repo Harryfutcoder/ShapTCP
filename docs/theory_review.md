@@ -12,6 +12,12 @@ ShapTCP should be described as:
 exact static Shapley scarcity weights + residual/additional coverage greedy
 ```
 
+This position is aligned with the classic TCP formulation in which a
+prioritizer searches over permutations of a test suite to maximize a chosen
+performance function. In our paper, APFD/APFDc are evaluation functions over
+the final permutation, while ShapTCP's optimized surrogate is residual
+Shapley-weighted coverage.
+
 For a test-to-entity matrix `F_i`, with `T_f = {i : f in F_i}`, the exact
 coverage-game Shapley contribution is:
 
@@ -61,6 +67,8 @@ Defensible theory language:
 - coverage is monotone submodular;
 - greedy has the standard guarantee for fixed weighted coverage subset
   objectives;
+- TCP's classic APFD objective is a sequence-level first-detection objective,
+  whereas ShapTCP optimizes a prefix coverage surrogate;
 - APFD/APFDc improvements are empirical claims;
 - unique-entity priority is a deterministic policy property only when the
   lexicographic variant is enabled.

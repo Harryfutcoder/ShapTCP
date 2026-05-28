@@ -18,7 +18,8 @@ marketing claims.
 ## Workflow Overview
 
 ```text
-source audit
+problem/model alignment
+  -> source audit
   -> matrix contract
   -> baseline compatibility
   -> run config validation
@@ -31,6 +32,30 @@ source audit
 
 Each stage has a stop condition. If a stop condition is hit, update source
 notes instead of running more experiments.
+
+## Stage 0: Problem and Metric Alignment
+
+Purpose: ensure the experiment is actually a TCP experiment and that the metric
+matches the data semantics.
+
+Required alignment:
+
+- candidate object is a permutation/order over test cases;
+- objective/evaluation is stated: APFD, APFDc, NAPFD, recall@k, rare_recall@k,
+  redundancy@k, or benchmark-native CI metric;
+- target entities are labeled as faults, bugs, mutants, coverage entities, or
+  CI proxies;
+- ShapTCP is described as optimizing residual Shapley-weighted coverage, not as
+  directly optimizing APFD.
+
+Stop conditions:
+
+- APFD is reported on non-fault entities without relabeling the claim;
+- APFDc is reported without verified durations;
+- coverage or CI-proxy columns are described as true faults;
+- the experiment only selects a subset and never defines the induced order.
+
+See `docs/tcp_problem_modeling.md` for the formal model and metric table.
 
 ## Stage 1: Source Audit
 

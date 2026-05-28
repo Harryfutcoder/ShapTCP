@@ -47,6 +47,36 @@ Primary links:
 - TCP-CI: https://github.com/Ahmadreza-SY/TCP-CI
 - AutoTCP: https://github.com/humains-lab/2026-AutoTCP
 
+For the formal TCP problem model, objective families, metric definitions, and
+how ShapTCP maps to the standard permutation formulation, see
+`docs/tcp_problem_modeling.md`.
+
+## TCP Modeling Alignment
+
+This paper treats TCP as a permutation optimization problem:
+
+```text
+Given test suite T, all permutations PT, and objective f: PT -> R,
+find pi* in PT such that f(pi*) >= f(pi) for every pi in PT.
+```
+
+The primary evaluation objective is early detection, measured by APFD/APFDc or
+benchmark-native CI metrics. ShapTCP does not solve this sequence-level
+objective exactly. It uses a tractable surrogate:
+
+```text
+score_i(S) = sum_{f in F_i \ covered(S)} w_f / |T_f|
+```
+
+This surrogate is residual weighted coverage with exact Shapley scarcity
+weights. Therefore, ShapTCP's main mechanism-level outcomes are:
+
+- earlier rare-entity detection;
+- lower redundant early coverage;
+- APFD/APFDc that is competitive with classic additional coverage.
+
+APFD/APFDc superiority is an empirical question, not a theorem.
+
 ## Experiment 0: Mechanism Sanity
 
 Goal: verify that the implementation matches the corrected theory before using
@@ -139,8 +169,8 @@ Acceptance gate:
 
 - every result row must include `evidence_level`, `claim_scope`, and verified
   `semantics`;
-- matrix columns must be labeled as `fault`, `mutant`, `statement`, `branch`,
-  `method`, or `ci_proxy`;
+- matrix columns must be labeled as `fault`, `bug`, `mutant`, `statement`,
+  `branch`, `method`, or `ci_proxy`;
 - ShapTCP must be compared against `additional` on every subject.
 
 Success criterion for the first paper:
@@ -155,7 +185,7 @@ Runner:
 PYTHONPATH=src python3 scripts/run_benchmark_matrix.py matrix.txt \
   --benchmark <benchmark> \
   --subject <subject> \
-  --semantics <fault|mutant|statement|branch|method> \
+  --semantics <fault|bug|mutant|statement|branch|method|ci_proxy> \
   --evidence-level public_benchmark \
   --claim-scope matrix_core \
   --k 20

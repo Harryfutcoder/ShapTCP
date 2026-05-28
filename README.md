@@ -65,6 +65,7 @@ docs/
   theory_review.md    # compressed theory audit and claim boundaries
   full_benchmark_pipeline.md # development-machine benchmark pipeline
   experiment_design.md # paper-level RQs, baselines, metrics, environments
+  tcp_problem_modeling.md # TCP formalization, metrics, and ShapTCP surrogate
   paper_experiment_checklist.md # paper experiment artifact/run checklist
   testing_se_research_workflow.md # experiment integrity workflow and gates
   benchmark_audit.md  # verified benchmark/resource notes
@@ -103,6 +104,8 @@ See [docs/full_benchmark_pipeline.md](docs/full_benchmark_pipeline.md) for the
 development-machine benchmark integration plan.
 See [docs/experiment_design.md](docs/experiment_design.md) for the paper-level
 experiment matrix.
+See [docs/tcp_problem_modeling.md](docs/tcp_problem_modeling.md) for the TCP
+formalization, metric definitions, and ShapTCP surrogate objective.
 See [docs/paper_experiment_checklist.md](docs/paper_experiment_checklist.md)
 for the exact paper experiment artifact/run checklist.
 See [docs/testing_se_research_workflow.md](docs/testing_se_research_workflow.md)
