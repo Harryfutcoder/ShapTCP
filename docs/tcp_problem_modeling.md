@@ -31,8 +31,14 @@ Survey-level framing:
 - Khatibsyarbini et al. classify TCP approaches by input data, technique type,
   and evaluation target, and emphasize that prioritization improves testing
   efficiency by scheduling execution order.
+- Khatibsyarbini et al. explicitly separate minimization, selection, and
+  prioritization: minimization removes redundant tests, selection chooses
+  change-relevant tests, and prioritization orders the candidate tests.
 - TCPFramework-style CI work treats TCP as an online/CI scheduling problem with
   temporal history, durations, flaky tests, and per-cycle feedback.
+- CI-focused mapping work reports that many CI TCP approaches are
+  history-based and are commonly evaluated by time and fault-detection
+  effectiveness.
 
 Reference links used for this alignment:
 
@@ -41,6 +47,12 @@ Reference links used for this alignment:
 - Yoo and Harman, "Regression testing minimization, selection and
   prioritization: a survey":
   https://kclpure.kcl.ac.uk/portal/en/publications/regression-testing-minimization-selection-and-prioritization-a-su
+- Khatibsyarbini et al., "Test case prioritization approaches in regression
+  testing: A systematic literature review":
+  https://eprints.utm.my/85361/
+- Lima et al., "Test Case Prioritization in Continuous Integration
+  environments: A systematic mapping study":
+  https://www.sciencedirect.com/science/article/pii/S0950584920300185
 - Chojnacki and Madeyski, TCPFramework systematic review and replication
   package:
   https://github.com/LechMadeyski/MSc25TomaszChojnacki
@@ -71,6 +83,37 @@ The entity set `F` is not always true faults:
 
 This distinction is a construct-validity requirement. A coverage matrix should
 not be described as a true fault-detection benchmark.
+
+## Regression Testing Task Boundaries
+
+Do not merge these tasks in the paper or code.
+
+| Task | Output | Typical Goal | ShapTCP Relation |
+|---|---|---|---|
+| Test suite minimization/reduction | smaller suite | permanently remove redundant tests while preserving a criterion | not our target |
+| Regression test selection | subset for current change | temporarily run change-relevant tests | can feed candidate set, but not ShapTCP itself |
+| Test case prioritization | ordered sequence/permutation | execute higher-value tests earlier | our target |
+| Test suite augmentation/generation | new tests | add tests for new behavior | outside current paper |
+
+ShapTCP takes the candidate set as fixed. If an upstream selector filters tests,
+that selector must be part of the documented protocol and must be applied
+equally to all baselines.
+
+## TCP Scenario Families
+
+TCP studies differ mainly by what information is visible before ordering.
+
+| Scenario | Visible Information | Common Data Semantics | Common Metrics | Risk |
+|---|---|---|---|---|
+| White-box regression TCP | coverage from previous version, program structure | statement/branch/method/mutant/fault matrix | APFD, APFDc, coverage recall | treating coverage as true faults |
+| Black-box/input TCP | test text, input strings, names, distances | similarity/distance, failure history | APFD, NAPFD, time to failure | comparing against coverage baselines with extra information |
+| History-based TCP | previous outcomes and durations | pass/fail/failure count/duration history | APFD/APFDc/NAPFD, CI metrics | leakage from current/future cycle |
+| CI TCP | per-build history, changed files, flaky tests, time limits | failing tests or failure-signature proxies | NTR, ATR, rAPFDc, TTFF, time-budget recall | temporal split and proxy semantics |
+| ML/RL TCP | engineered features and labels/rewards | learned failure probability or ranking reward | benchmark-native metrics plus training cost | unfair feature visibility or retraining protocol |
+
+ShapTCP's first paper is a matrix-based method. It can be evaluated in
+white-box or generated-matrix settings first; history-based/CI use requires a
+separate adapter that constructs valid entities from historical outcomes.
 
 ## Standard Objective Families
 
@@ -103,6 +146,17 @@ APFD(pi) = 1 - (sum_f TF_f(pi)) / (n * m) + 1 / (2n)
 Maximizing APFD is equivalent to minimizing the sum of first-detection
 positions. Exact optimization is combinatorial over `n!` orderings and is
 normally approached with heuristics or greedy surrogates.
+
+Important distinction:
+
+```text
+APFD/APFDc/NAPFD = evaluation functions over a produced order.
+Algorithm score  = rule used to construct the order.
+```
+
+A TCP paper may optimize a surrogate score and evaluate with APFD, but it must
+not state that it directly maximizes APFD unless the optimizer actually searches
+that objective.
 
 ### Cost-Aware Objective
 
@@ -170,6 +224,26 @@ budget, and metric formula.
 | GA/search-based | search over orderings or prefixes | compare only with matched objective/inputs |
 | RL/ML CI methods | learned policy/ranker over history/features | require temporal split and same observable information |
 
+## Technique Families in Prior TCP Work
+
+This taxonomy is useful when deciding which baselines belong in the same
+experiment.
+
+| Family | Examples | Primary Signal Used | Fair Comparison Requirement |
+|---|---|---|---|
+| Untreated/random controls | original order, random | none or benchmark-native order | same candidate tests, enough seeds |
+| Coverage-count heuristics | total, additional | coverage/fault/mutant matrix | same matrix and same budget |
+| Greedy cost-aware heuristics | shortest, cost-additional | matrix plus durations | verified duration source |
+| Requirement/risk/value based | requirement priority, severity | requirements, business value, severity | same requirement/fault weights available to all methods |
+| Similarity/diversity based | ART, FAST | distance/similarity over tests | same representation and distance protocol |
+| Search-based | GA, ACO, PSO, multi-objective search | explicit objective/fitness | same objective, time budget, and repeated runs |
+| History-based heuristics | recent failures, failure density, duration | previous build/test outcomes | strict temporal split |
+| ML/ranking/RL | learning-to-rank, RL policies, deep models | historical features and labels | same training window, feature visibility, and retraining cadence |
+
+ShapTCP should be compared first with coverage-count and cost-aware heuristics.
+Similarity, search, and history/ML baselines are meaningful only after their
+input representation is aligned with ShapTCP's matrix and protocol.
+
 ## Where ShapTCP Fits
 
 ShapTCP does not directly optimize APFD. It optimizes a scarcity-aware coverage
@@ -210,6 +284,21 @@ attribution:
   during ordering;
 - compared with APFD/APFDc, ShapTCP is a tractable surrogate whose sequence
   effectiveness must be evaluated empirically.
+
+ShapTCP is not:
+
+- a test-selection method;
+- a learned failure predictor;
+- an APFD optimizer;
+- a dynamic-degree Shapley method;
+- a CI-history method unless a valid history-to-entity adapter is added.
+
+ShapTCP is:
+
+- a deterministic matrix-based prioritizer;
+- a scarcity-aware variant of residual/additional coverage;
+- a cooperative-game attribution layer over weighted coverage;
+- a low-cost method that can run without GPU or training data.
 
 ## Mathematical Properties We Can Defend
 
