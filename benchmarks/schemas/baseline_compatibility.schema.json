@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShapTCP Baseline Compatibility Contract",
+  "type": "object",
+  "required": [
+    "candidate_tests",
+    "observable_information",
+    "split",
+    "budget",
+    "metric_definition",
+    "duration_source"
+  ],
+  "properties": {
+    "candidate_tests": {"enum": ["aligned", "unknown", "unchecked", "different", "unaligned"]},
+    "observable_information": {"enum": ["aligned", "unknown", "unchecked", "future_leakage", "unaligned"]},
+    "split": {"enum": ["aligned", "unknown", "unchecked", "different", "unaligned"]},
+    "budget": {"enum": ["aligned", "unknown", "unchecked", "different", "unaligned"]},
+    "metric_definition": {"enum": ["aligned", "unknown", "unchecked", "different", "unaligned"]},
+    "duration_source": {"enum": ["aligned", "not_applicable", "synthetic", "unknown", "unchecked", "different", "unaligned"]}
+  },
+  "additionalProperties": true
+}

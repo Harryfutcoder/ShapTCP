@@ -29,8 +29,15 @@ def main() -> None:
     parser.add_argument("--benchmark", default="manual", help="Benchmark id for output metadata.")
     parser.add_argument("--subject", default="unknown", help="Subject/version id for output metadata.")
     parser.add_argument("--semantics", default="unverified", help="Column semantics: fault/mutant/statement/etc.")
+    parser.add_argument("--run-id", default="manual-run", help="Traceable run id for output metadata.")
     parser.add_argument("--evidence-level", default="pipeline_validation")
     parser.add_argument("--claim-scope", default="adapter_smoke")
+    parser.add_argument("--source-status", default="unknown")
+    parser.add_argument("--matrix-status", default="unknown")
+    parser.add_argument("--result-status", default="local_smoke_only")
+    parser.add_argument("--ground-truth-level", default="unverified")
+    parser.add_argument("--duration-source", default="not_available")
+    parser.add_argument("--budget-policy", default="count")
     parser.add_argument("--allow-unverified", action="store_true", help="Allow --semantics unverified.")
     parser.add_argument("--durations", type=Path, help="Optional CSV with test_id,duration.")
     parser.add_argument("--test-ids", type=Path, help="Optional newline file of row/test ids.")
@@ -49,7 +56,9 @@ def main() -> None:
     orders = build_orders(dataset.test_to_faults, durations, args.budget_count, args.random_seeds)
 
     print(
-        "benchmark,subject,semantics,evidence_level,claim_scope,method,selected,"
+        "run_id,benchmark,subject,semantics,evidence_level,claim_scope,"
+        "source_status,matrix_status,result_status,ground_truth_level,duration_source,"
+        "k,budget_policy,budget_count,random_seeds,method,selected,"
         "apfd,apfdc,recall_at_k,rare_recall_at_k,redundancy_at_k"
     )
     for name, order in orders.items():
@@ -57,11 +66,21 @@ def main() -> None:
         print(
             ",".join(
                 [
+                    args.run_id,
                     args.benchmark,
                     args.subject,
                     args.semantics,
                     args.evidence_level,
                     args.claim_scope,
+                    args.source_status,
+                    args.matrix_status,
+                    args.result_status,
+                    args.ground_truth_level,
+                    args.duration_source,
+                    str(args.k),
+                    args.budget_policy,
+                    "" if args.budget_count is None else str(args.budget_count),
+                    str(args.random_seeds),
                     name,
                     str(len(order)),
                     fmt(apfd(order, dataset.test_to_faults)),

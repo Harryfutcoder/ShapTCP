@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShapTCP Matrix Contract",
+  "type": "object",
+  "required": [
+    "path",
+    "test_ids_path",
+    "entity_ids_path",
+    "row_semantics",
+    "column_semantics",
+    "value_semantics",
+    "ground_truth_level",
+    "empty_policy",
+    "duplicate_policy",
+    "verified_by"
+  ],
+  "properties": {
+    "path": {"type": "string"},
+    "test_ids_path": {"type": "string"},
+    "entity_ids_path": {"type": "string"},
+    "row_semantics": {
+      "enum": ["test_method", "test_class", "test_script", "ci_job", "generated_test"]
+    },
+    "column_semantics": {
+      "enum": ["fault", "bug", "mutant", "statement", "branch", "method", "ci_proxy"]
+    },
+    "value_semantics": {
+      "enum": ["covers", "kills", "detects", "triggering_test_detects_bug", "fails_with", "co_occurs_with"]
+    },
+    "ground_truth_level": {
+      "enum": ["true_fault", "true_bug_metadata", "execution_derived_bug", "mutant_proxy", "coverage_only", "ci_proxy"]
+    },
+    "empty_policy": {"type": "string"},
+    "duplicate_policy": {"type": "string"},
+    "duration_source": {"type": "string"},
+    "checksum_sha256": {"type": "string"},
+    "verified_by": {"type": "string"}
+  },
+  "additionalProperties": true
+}

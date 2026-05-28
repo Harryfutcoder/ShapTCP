@@ -50,11 +50,15 @@ scripts/
   run_benchmark_matrix.py # manifest-compatible matrix runner
   build_defects4j_metadata_matrix.py # metadata-only trigger matrix adapter
   build_defects4j_trigger_matrix.py # Defects4J checkout/export adapter
+  validate_run_config.py # run-config fairness gate
+  preflight_experiment.py # run-config plus optional matrix/file checks
 tests/
   test_*.py           # unit tests
 benchmarks/
   manifest.json       # benchmark source registry and status fields
   run_config_template.json # per-run metadata template
+  examples/           # known-valid run configs
+  schemas/            # machine-readable experiment contracts
   source_notes/       # source-specific audit notes
 docs/
   roadmap.md          # research and benchmark roadmap
@@ -62,6 +66,7 @@ docs/
   full_benchmark_pipeline.md # development-machine benchmark pipeline
   experiment_design.md # paper-level RQs, baselines, metrics, environments
   paper_experiment_checklist.md # paper experiment artifact/run checklist
+  testing_se_research_workflow.md # experiment integrity workflow and gates
   benchmark_audit.md  # verified benchmark/resource notes
   sota_baselines.md   # paper-to-code baseline and benchmark map
   experimental_plan.md # staged experiment plan and claim boundaries
@@ -74,6 +79,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests
 PYTHONPATH=src python3 scripts/run_synthetic.py
 PYTHONPATH=src python3 scripts/run_synthetic_suite.py
 PYTHONPATH=src python3 scripts/audit_benchmarks.py
+PYTHONPATH=src python3 scripts/preflight_experiment.py \
+  benchmarks/examples/defects4j_metadata_smoke.run_config.json --check-files
 ```
 
 Expected status right now: unit tests pass and synthetic scenarios run locally.
@@ -98,3 +105,5 @@ See [docs/experiment_design.md](docs/experiment_design.md) for the paper-level
 experiment matrix.
 See [docs/paper_experiment_checklist.md](docs/paper_experiment_checklist.md)
 for the exact paper experiment artifact/run checklist.
+See [docs/testing_se_research_workflow.md](docs/testing_se_research_workflow.md)
+for the benchmark/baseline/data-semantics integrity workflow.

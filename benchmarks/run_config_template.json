@@ -3,7 +3,7 @@
   "id": "benchmark-subject-smoke",
   "evidence_level": "pipeline_validation",
   "claim_scope": "adapter_smoke",
-  "source_status": "source_audited",
+  "source_status": "source-audited",
   "matrix_status": "verified",
   "result_status": "local_smoke_only",
   "source": {
@@ -23,14 +23,21 @@
     "path": "data/processed/.../matrix.txt",
     "test_ids_path": "data/processed/.../matrix.txt.tests",
     "entity_ids_path": "data/processed/.../matrix.txt.entities",
-    "column_semantics": "fault|mutant|statement|branch|method|ci_proxy",
-    "ground_truth_level": "true_fault|mutant_proxy|coverage_only|ci_proxy",
+    "row_semantics": "test_method|test_class|test_script|ci_job|generated_test",
+    "column_semantics": "fault|bug|mutant|statement|branch|method|ci_proxy",
+    "value_semantics": "covers|kills|detects|triggering_test_detects_bug|fails_with|co_occurs_with",
+    "ground_truth_level": "true_fault|true_bug_metadata|execution_derived_bug|mutant_proxy|coverage_only|ci_proxy",
+    "empty_policy": "kept|removed_with_reason",
+    "duplicate_policy": "kept|deduplicated_with_mapping",
+    "duration_source": "benchmark_native|tool_measured|not_available",
+    "checksum_sha256": "",
     "verified_by": "benchmarks/source_notes/<benchmark>.md"
   },
   "protocol": {
     "split": "none|temporal|train_test",
     "leakage_guard": "benchmark_native",
     "k": 20,
+    "budget_policy": "count|time",
     "budget_count": null,
     "random_seeds": 30
   },
@@ -48,8 +55,20 @@
     "rare_fault_recall_at_k",
     "redundancy_at_k"
   ],
+  "baseline_compatibility": {
+    "candidate_tests": "aligned",
+    "observable_information": "aligned",
+    "split": "aligned",
+    "budget": "aligned",
+    "metric_definition": "aligned",
+    "duration_source": "aligned|not_applicable"
+  },
   "outputs": {
-    "results_csv": "data/processed/.../results.csv"
+    "run_id": "benchmark-subject-smoke",
+    "results_csv": "outputs/benchmark-subject-smoke/results.csv",
+    "orders_dir": "outputs/benchmark-subject-smoke/orders",
+    "traces_dir": "outputs/benchmark-subject-smoke/traces",
+    "logs_dir": "outputs/benchmark-subject-smoke/logs"
   },
   "claim_boundary": {
     "allowed": [

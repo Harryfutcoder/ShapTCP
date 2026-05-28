@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShapTCP Result Table Contract",
+  "type": "object",
+  "required": [
+    "run_id",
+    "benchmark",
+    "subject",
+    "semantics",
+    "evidence_level",
+    "claim_scope",
+    "source_status",
+    "matrix_status",
+    "result_status",
+    "method",
+    "selected",
+    "apfd",
+    "recall_at_k",
+    "rare_recall_at_k",
+    "redundancy_at_k"
+  ],
+  "properties": {
+    "run_id": {"type": "string"},
+    "benchmark": {"type": "string"},
+    "subject": {"type": "string"},
+    "semantics": {"type": "string"},
+    "evidence_level": {"type": "string"},
+    "claim_scope": {"type": "string"},
+    "source_status": {"type": "string"},
+    "matrix_status": {"type": "string"},
+    "result_status": {"type": "string"},
+    "method": {"type": "string"},
+    "selected": {"type": "integer"},
+    "apfd": {"type": "number"},
+    "apfdc": {"type": ["number", "string", "null"]},
+    "recall_at_k": {"type": "number"},
+    "rare_recall_at_k": {"type": "number"},
+    "redundancy_at_k": {"type": "number"}
+  },
+  "additionalProperties": true
+}

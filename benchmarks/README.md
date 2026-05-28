@@ -9,6 +9,10 @@ machine experiments. It does not store large datasets.
 benchmarks/
   manifest.json              # benchmark source and adapter registry
   SOURCE_NOTES_TEMPLATE.md   # copy per benchmark after download/audit
+  RUN_RECORD_TEMPLATE.md     # copy per reported run
+  run_config_template.json   # copy per experiment
+  examples/                  # known-valid smoke run configs
+  schemas/                   # matrix, baseline, and result table contracts
 data/
   raw/                       # ignored local artifact downloads
   processed/                 # ignored converted matrices and result tables
@@ -23,6 +27,21 @@ Audit which sources are available:
 
 ```bash
 PYTHONPATH=src python3 scripts/audit_benchmarks.py
+```
+
+Validate a run configuration:
+
+```bash
+PYTHONPATH=src python3 scripts/validate_run_config.py path/to/run_config.json
+PYTHONPATH=src python3 scripts/preflight_experiment.py path/to/run_config.json
+PYTHONPATH=src python3 scripts/preflight_experiment.py path/to/run_config.json --check-files
+```
+
+Try the checked metadata-smoke example:
+
+```bash
+PYTHONPATH=src python3 scripts/preflight_experiment.py \
+  benchmarks/examples/defects4j_metadata_smoke.run_config.json --check-files
 ```
 
 Find row-wise dense `0/1` matrices in an artifact:

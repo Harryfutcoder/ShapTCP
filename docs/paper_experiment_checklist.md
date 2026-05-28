@@ -125,6 +125,17 @@ After cloning, run:
 PYTHONPATH=src python3 scripts/audit_benchmarks.py
 ```
 
+Before any public benchmark run, validate the run config:
+
+```bash
+PYTHONPATH=src python3 scripts/validate_run_config.py path/to/run_config.json
+PYTHONPATH=src python3 scripts/preflight_experiment.py path/to/run_config.json --check-files
+```
+
+Use `benchmarks/examples/defects4j_metadata_smoke.run_config.json` as a known
+valid template, but keep its `claim_scope=metadata_adapter_smoke` unless the
+matrix is regenerated from real execution.
+
 ## Matrix Benchmark Commands
 
 Discover candidate dense binary matrices:
@@ -148,9 +159,13 @@ PYTHONPATH=src python3 scripts/run_benchmark_matrix.py \
   data/processed/<benchmark>/<subject>.txt \
   --benchmark <benchmark> \
   --subject <subject> \
-  --semantics <fault|mutant|statement|branch|method> \
+  --semantics <fault|bug|mutant|statement|branch|method|ci_proxy> \
+  --run-id <benchmark>-<subject>-matrix-core \
   --evidence-level public_benchmark \
   --claim-scope matrix_core \
+  --source-status source-audited \
+  --matrix-status verified \
+  --result-status reportable \
   --k 20 \
   --random-seeds 30
 ```
@@ -207,8 +222,13 @@ PYTHONPATH=src python3 scripts/run_benchmark_matrix.py \
   --benchmark defects4j \
   --subject Lang_1_3_4_trigger \
   --semantics bug \
+  --run-id defects4j-lang-1-3-4-trigger \
   --evidence-level public_benchmark \
   --claim-scope execution_derived_trigger_matrix \
+  --source-status tool-audited \
+  --matrix-status verified \
+  --result-status reportable \
+  --ground-truth-level execution_derived_bug \
   --k 10
 ```
 
