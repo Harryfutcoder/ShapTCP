@@ -11,8 +11,9 @@ from .types import FaultId, TestId
 def apfd(order: Sequence[TestId], test_to_faults: Mapping[TestId, Iterable[FaultId]]) -> float:
     """Average Percentage of Faults Detected.
 
-    Faults not detected by the provided order are assigned position n + 1, which
-    makes this usable for budgeted prefixes as a conservative score.
+    Classic APFD assumes a complete test order. Faults not detected by the
+    provided order are assigned position n + 1 as a diagnostic fallback; public
+    budgeted-prefix experiments should report NAPFD or prefix recall instead.
     """
 
     normalized = normalize_matrix(test_to_faults)

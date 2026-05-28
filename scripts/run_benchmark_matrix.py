@@ -62,7 +62,9 @@ def main() -> None:
         "apfd,apfdc,recall_at_k,rare_recall_at_k,redundancy_at_k"
     )
     for name, order in orders.items():
-        apfdc_value = apfdc(order, dataset.test_to_faults, durations) if durations else float("nan")
+        full_order = len(order) == len(dataset.test_ids)
+        apfd_value = apfd(order, dataset.test_to_faults) if full_order else float("nan")
+        apfdc_value = apfdc(order, dataset.test_to_faults, durations) if durations and full_order else float("nan")
         print(
             ",".join(
                 [
@@ -83,7 +85,7 @@ def main() -> None:
                     str(args.random_seeds),
                     name,
                     str(len(order)),
-                    fmt(apfd(order, dataset.test_to_faults)),
+                    fmt(apfd_value),
                     fmt(apfdc_value),
                     fmt(fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
                     fmt(rare_fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
@@ -95,7 +97,7 @@ def main() -> None:
 
 def build_orders(test_to_faults, durations, budget_count: int | None, random_seeds: int):
     orders = {
-        "total": total_coverage_order(test_to_faults),
+        "total": clip(total_coverage_order(test_to_faults), budget_count),
         "additional": additional_coverage_order(test_to_faults, budget_count=budget_count),
         "static_shapley": clip(static_shapley_order(test_to_faults), budget_count),
         "shaptcp": shaptcp_order(test_to_faults, budget_count=budget_count).order,
@@ -103,7 +105,7 @@ def build_orders(test_to_faults, durations, budget_count: int | None, random_see
     for seed in range(random_seeds):
         orders[f"random_{seed}"] = clip(random_order(test_to_faults, seed=seed), budget_count)
     if durations:
-        orders["shortest"] = shortest_duration_order(test_to_faults, durations)
+        orders["shortest"] = clip(shortest_duration_order(test_to_faults, durations), budget_count)
         orders["cost_additional"] = cost_aware_additional_coverage_order(
             test_to_faults,
             durations,

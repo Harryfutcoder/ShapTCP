@@ -75,7 +75,7 @@ def static_shapley_scores(
 
     normalized = normalize_matrix(test_to_faults)
     degrees = fault_degrees(normalized)
-    weights = fault_weights or {}
+    weights = _normalize_fault_weights(fault_weights)
     scores: dict[TestId, float] = {}
 
     for test, faults in normalized.items():
@@ -142,10 +142,10 @@ def shaptcp_order(
 
     normalized = normalize_matrix(test_to_faults)
     durations = durations or {}
-    weights = fault_weights or {}
+    weights = _normalize_fault_weights(fault_weights)
     bonuses = exploration_bonus or {}
     degrees = fault_degrees(normalized)
-    static_scores = static_shapley_scores(normalized, fault_weights=fault_weights)
+    static_scores = static_shapley_scores(normalized, fault_weights=weights)
 
     remaining_tests = set(normalized)
     covered_faults: set[FaultId] = set()
@@ -215,3 +215,13 @@ def _reverse_sort_key(value: TestId) -> str:
     """Make deterministic max() tie-breaking prefer lexical ascending ids."""
 
     return "".join(chr(255 - ord(ch)) for ch in str(value))
+
+
+def _normalize_fault_weights(fault_weights: Mapping[FaultId, float] | None) -> dict[FaultId, float]:
+    weights: dict[FaultId, float] = {}
+    for fault, weight in (fault_weights or {}).items():
+        value = float(weight)
+        if value < 0:
+            raise ValueError(f"fault weight for {fault!r} must be non-negative")
+        weights[fault] = value
+    return weights

@@ -1,3 +1,5 @@
+from itertools import combinations
+from math import factorial
 import unittest
 
 from shaptcp import (
@@ -25,6 +27,25 @@ class CooperativeTests(unittest.TestCase):
         self.assertAlmostEqual(scores["A"], 1.0)
         self.assertAlmostEqual(scores["B"], 1.0)
         self.assertAlmostEqual(scores["C"], 1.0)
+
+    def test_static_shapley_matches_definition_on_weighted_coverage_game(self):
+        matrix = {
+            "A": {"f1", "f2"},
+            "B": {"f1"},
+            "C": {"f1", "f3"},
+        }
+        weights = {"f1": 3.0, "f2": 2.0, "f3": 5.0}
+
+        closed_form = static_shapley_scores(matrix, fault_weights=weights)
+
+        for test in matrix:
+            self.assertAlmostEqual(closed_form[test], brute_force_shapley(matrix, weights, test))
+
+    def test_negative_fault_weights_are_rejected(self):
+        matrix = {"A": {"f1"}}
+
+        with self.assertRaises(ValueError):
+            static_shapley_scores(matrix, fault_weights={"f1": -1.0})
 
     def test_shaptcp_avoids_redundant_second_pick(self):
         matrix = {
@@ -111,6 +132,32 @@ class CooperativeTests(unittest.TestCase):
         self.assertAlmostEqual(fault_recall_at_k(order, matrix, k=2), 2 / 3)
         self.assertAlmostEqual(rare_fault_recall_at_k(order, matrix, k=2), 0.0)
         self.assertGreater(redundancy_at_k(order, matrix, k=2), 0.0)
+
+
+def brute_force_shapley(matrix: dict[str, set[str]], weights: dict[str, float], player: str) -> float:
+    tests = tuple(matrix)
+    others = tuple(test for test in tests if test != player)
+    n = len(tests)
+    total = 0.0
+
+    for size in range(n):
+        for coalition in combinations(others, size):
+            coefficient = factorial(size) * factorial(n - size - 1) / factorial(n)
+            marginal = coverage_value(matrix, weights, (*coalition, player)) - coverage_value(
+                matrix,
+                weights,
+                coalition,
+            )
+            total += coefficient * marginal
+
+    return total
+
+
+def coverage_value(matrix: dict[str, set[str]], weights: dict[str, float], coalition: tuple[str, ...]) -> float:
+    covered: set[str] = set()
+    for test in coalition:
+        covered.update(matrix[test])
+    return sum(weights.get(fault, 1.0) for fault in covered)
 
 
 if __name__ == "__main__":
