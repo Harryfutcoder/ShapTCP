@@ -17,7 +17,7 @@
     "project": "Lang",
     "version": "metadata-trigger-1-3-4",
     "bug_ids": ["1", "3", "4"],
-    "candidate_tests": "Defects4J metadata triggering tests only"
+    "candidate_tests": "Defects4J metadata triggering tests only; adapter smoke, not a reportable ranking universe"
   },
   "matrix": {
     "path": "data/processed/defects4j/Lang_metadata_trigger_1_3_4.txt",
@@ -49,7 +49,6 @@
     "shaptcp"
   ],
   "metrics": [
-    "apfd",
     "fault_recall_at_k",
     "rare_fault_recall_at_k",
     "redundancy_at_k"
@@ -77,6 +76,7 @@
     "disallowed": [
       "SOTA claim",
       "public benchmark performance claim",
+      "APFD performance claim because the candidate universe contains only triggering tests",
       "execution-derived bug-detection claim",
       "APFDc claim because no real durations are present"
     ]

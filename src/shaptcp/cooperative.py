@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
 
 from .baselines import additional_coverage_order, random_order, total_coverage_order
+from .durations import normalize_durations
 
 from .types import FaultId, TestId
 
@@ -141,7 +142,12 @@ def shaptcp_order(
         raise ValueError("cost_exponent must be non-negative")
 
     normalized = normalize_matrix(test_to_faults)
-    durations = durations or {}
+    uses_durations = bool(durations) or time_budget is not None or cost_exponent > 0
+    if uses_durations:
+        costs = normalize_durations(durations or {}, normalized, context="durations")
+    else:
+        costs = {test: 1.0 for test in normalized}
+    duration_affects_priority = time_budget is not None or cost_exponent > 0
     weights = _normalize_fault_weights(fault_weights)
     bonuses = exploration_bonus or {}
     degrees = fault_degrees(normalized)
@@ -165,22 +171,21 @@ def shaptcp_order(
         best_new: set[FaultId] = set()
 
         for test in sorted(remaining_tests, key=str):
-            duration = float(durations.get(test, 1.0))
-            if duration < 0:
-                raise ValueError(f"duration for {test!r} must be non-negative")
+            duration = costs[test]
             if time_budget is not None and cumulative_time + duration > time_budget:
                 continue
 
             newly_covered = normalized[test] - covered_faults
             raw_score = sum(float(weights.get(fault, 1.0)) / degrees[fault] for fault in newly_covered)
             raw_score += float(bonuses.get(test, 0.0))
-            adjusted_score = raw_score / (max(duration, 1e-12) ** cost_exponent)
+            adjusted_score = raw_score / (duration**cost_exponent)
             unique_count = sum(1 for fault in newly_covered if degrees[fault] == 1)
+            duration_tie_break = -duration if duration_affects_priority else 0.0
 
             if lexicographic_unique:
-                key = (float(unique_count), adjusted_score, -duration)
+                key = (float(unique_count), adjusted_score, duration_tie_break)
             else:
-                key = (adjusted_score, -duration, 0.0)
+                key = (adjusted_score, duration_tie_break, 0.0)
 
             if best_key is None or key > best_key:
                 best_test = test
@@ -195,7 +200,7 @@ def shaptcp_order(
         remaining_tests.remove(best_test)
         order.append(best_test)
         covered_faults.update(best_new)
-        cumulative_time += float(durations.get(best_test, 1.0))
+        cumulative_time += costs[best_test]
         traces.append(
             StepTrace(
                 test=best_test,

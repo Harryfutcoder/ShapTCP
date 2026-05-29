@@ -5,18 +5,26 @@ from __future__ import annotations
 from typing import Iterable, Mapping, Sequence
 
 from .cooperative import fault_degrees, normalize_matrix
+from .durations import normalize_durations
 from .types import FaultId, TestId
 
 
-def apfd(order: Sequence[TestId], test_to_faults: Mapping[TestId, Iterable[FaultId]]) -> float:
+def apfd(
+    order: Sequence[TestId],
+    test_to_faults: Mapping[TestId, Iterable[FaultId]],
+    *,
+    require_complete: bool = True,
+) -> float:
     """Average Percentage of Faults Detected.
 
-    Classic APFD assumes a complete test order. Faults not detected by the
-    provided order are assigned position n + 1 as a diagnostic fallback; public
-    budgeted-prefix experiments should report NAPFD or prefix recall instead.
+    Classic APFD assumes a complete permutation of the candidate test suite.
+    Set ``require_complete=False`` only for diagnostic APFD-like calculations;
+    public budgeted-prefix experiments should report NAPFD or prefix recall.
     """
 
     normalized = normalize_matrix(test_to_faults)
+    if require_complete:
+        _validate_complete_order(order, normalized, metric="APFD")
     faults = set().union(*normalized.values()) if normalized else set()
     n = len(order)
     m = len(faults)
@@ -31,16 +39,23 @@ def apfdc(
     order: Sequence[TestId],
     test_to_faults: Mapping[TestId, Iterable[FaultId]],
     durations: Mapping[TestId, float],
+    *,
+    require_complete: bool = True,
 ) -> float:
     """Cost-cognizant APFD.
 
-    This follows the standard APFDc area formulation. Undetected faults in a
-    partial order contribute zero area after the schedule ends.
+    This follows the standard APFDc area formulation. APFDc requires complete,
+    strictly positive per-test durations aligned with the candidate suite. Set
+    ``require_complete=False`` only for explicitly labeled diagnostics.
     """
 
     normalized = normalize_matrix(test_to_faults)
+    if require_complete:
+        _validate_complete_order(order, normalized, metric="APFDc")
+    duration_scope = normalized if require_complete else order
+    costs = normalize_durations(durations, duration_scope, context="APFDc durations")
     faults = set().union(*normalized.values()) if normalized else set()
-    total_cost = sum(float(durations.get(test, 1.0)) for test in order)
+    total_cost = sum(costs[test] for test in order)
     m = len(faults)
     if total_cost <= 0 or m == 0 or not order:
         return float("nan")
@@ -52,8 +67,8 @@ def apfdc(
         if pos is None:
             continue
         fault_index = pos - 1
-        after_and_including = sum(float(durations.get(test, 1.0)) for test in order[fault_index:])
-        numerator += after_and_including - 0.5 * float(durations.get(order[fault_index], 1.0))
+        after_and_including = sum(costs[test] for test in order[fault_index:])
+        numerator += after_and_including - 0.5 * costs[order[fault_index]]
     return numerator / (m * total_cost)
 
 
@@ -151,3 +166,24 @@ def _first_detection_positions(
             if first[fault] == default:
                 first[fault] = pos
     return first
+
+
+def _validate_complete_order(
+    order: Sequence[TestId],
+    normalized: Mapping[TestId, set[FaultId]],
+    *,
+    metric: str,
+) -> None:
+    order_set = set(order)
+    expected_set = set(normalized)
+    if len(order) != len(order_set):
+        raise ValueError(f"{metric} requires a permutation without duplicate tests")
+    if order_set != expected_set:
+        missing = expected_set - order_set
+        extra = order_set - expected_set
+        details: list[str] = []
+        if missing:
+            details.append("missing=" + ",".join(str(test) for test in sorted(missing, key=str)[:5]))
+        if extra:
+            details.append("extra=" + ",".join(str(test) for test in sorted(extra, key=str)[:5]))
+        raise ValueError(f"{metric} requires a complete candidate-suite order ({'; '.join(details)})")

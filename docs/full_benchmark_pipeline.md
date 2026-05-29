@@ -74,8 +74,8 @@ Target benchmarks:
 
 - `OCP`: artifact already includes code, subject packages, result tables, and
   Java prioritizers that read dense coverage matrices.
-- `FAST`: source must be re-verified before paper use; use the same matrix
-  discovery path after download.
+- `FAST`: repository source has been identified; write the pickle/input loader
+  and confirm row/column direction before paper use.
 - `SIR`: use only after object package format and access/license constraints
   are recorded.
 
@@ -135,8 +135,9 @@ PYTHONPATH=src python3 scripts/run_benchmark_matrix.py matrix.txt \
 
 ## Stage B: Defects4J Trigger Matrix
 
-Defects4J is not a ready-made matrix benchmark. Start with a small trigger-test
-matrix before any coverage or mutation experiment.
+Defects4J is not a ready-made matrix benchmark. Its bug ids are separate buggy
+revisions, so trigger-test experiments must be framed as per-bug rank
+aggregation or explicitly labeled cross-version adapter smoke.
 
 Dry-run commands:
 
@@ -146,6 +147,7 @@ PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
   --project Lang \
   --bugs 1 3 4 \
   --work-dir data/work/defects4j \
+  --candidate-property tests.all \
   --output data/processed/defects4j/Lang_trigger_1_3_4.txt
 ```
 
@@ -170,6 +172,7 @@ PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
   --project Lang \
   --bugs 1 3 4 \
   --work-dir data/work/defects4j \
+  --candidate-property tests.all \
   --output data/processed/defects4j/Lang_trigger_1_3_4.txt \
   --execute
 ```
@@ -180,7 +183,12 @@ The script writes:
 Lang_trigger_1_3_4.txt           # dense binary matrix
 Lang_trigger_1_3_4.txt.tests     # row ids
 Lang_trigger_1_3_4.txt.entities  # bug columns
+Lang_trigger_1_3_4.txt.protocol.md
 ```
+
+Do not use `tests.trigger` as the candidate universe for reportable runs. It is
+only a trivial adapter smoke setting because all rows are already positive
+triggering tests.
 
 Run it:
 
@@ -190,8 +198,19 @@ PYTHONPATH=src python3 scripts/run_benchmark_matrix.py \
   --benchmark defects4j \
   --subject Lang_1_3_4_trigger \
   --semantics bug \
+  --evidence-level pipeline_validation \
+  --claim-scope execution_trigger_adapter_smoke \
+  --result-status local_smoke_only \
+  --ground-truth-level true_bug_metadata \
   --k 10
 ```
+
+The runner emits `nan` for APFD/APFDc unless the metadata marks the matrix as a
+true fault matrix or an execution-derived bug matrix. Metadata-only Defects4J
+smoke runs should therefore use recall/redundancy output only.
+
+The cross-bug trigger matrix should remain smoke evidence. A paper result needs
+a per-bug rank/TTFF/recall aggregator over each bug revision's candidate suite.
 
 Only after this works should we consider heavier Defects4J coverage or mutation
 matrices.

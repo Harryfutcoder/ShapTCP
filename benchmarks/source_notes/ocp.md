@@ -1,11 +1,14 @@
 # OCP Source Notes
 
-Status: source audited, matrix not yet confirmed for ShapTCP.
+Status: source audited, matrix not yet confirmed for ShapTCP. Repository HEAD
+verified by `git ls-remote` on 2026-05-29.
 
 ## Verified Local Source
 
 - Artifact URL: https://github.com/QuanjunZhang/OCP
-- Observed local root: `/private/tmp/OCP`
+- Observed HEAD on 2026-05-29:
+  `402ae40e9090260e74fb97d7b03db1a014c26644`
+- Observed temporary clone: `/private/tmp/shaptcp-audit-OCP2`
 - README states the artifact contains code, experimental data, subject programs,
   test suites, mutants, figures, and result data.
 
@@ -33,10 +36,10 @@ not yet identify a specific raw matrix file for ShapTCP.
 
 ## Current ShapTCP Audit Result
 
-Command:
+Previous/current audit command:
 
 ```bash
-PYTHONPATH=src python3 scripts/discover_matrices.py /private/tmp/OCP --scan-zip --limit 10
+PYTHONPATH=src python3 scripts/discover_matrices.py /private/tmp/shaptcp-audit-OCP2 --scan-zip --limit 10
 ```
 
 Observed result: no dense candidate matrix was found by the current shallow
@@ -47,6 +50,10 @@ Interpretation:
 - OCP is not yet matrix-ready for ShapTCP.
 - Existing APFD/priority/time CSV/JSON files are upstream artifact results, not
   ShapTCP results.
+- OCP's APFD/result-file naming is artifact-native. Do not label it as true
+  fault-detection APFD unless the matrix columns are verified true faults.
+- `data/PrioritizationTime` is prioritizer runtime, not per-test execution
+  duration, and is ineligible for APFDc.
 - Next step is to inspect or run the original Java artifact to locate the
   coverage-matrix inputs, or to generate matrices from the subject packages
   under the original protocol.

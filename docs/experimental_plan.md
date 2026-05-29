@@ -54,7 +54,7 @@ Do not claim:
 | RQ3 | Does ShapTCP maintain or improve conventional fault-detection effectiveness? | matrix benchmarks | APFD, fault recall@k, time-to-first-fault | empirical claim, not theorem |
 | RQ4 | Does cost-aware ShapTCP improve feedback under duration budgets? | benchmarks with durations or reconstructed execution cost | APFDc, time-budget recall, rare recall under time budgets | cost-aware variant |
 | RQ5 | How sensitive is ShapTCP to fault/entity representation? | bug id vs mutant id vs coverage entity vs clustered/raw failure signature | metric deltas, degree distribution before/after clustering | depends on representation protocol |
-| RQ6 | How does ShapTCP compare to broader matrix SOTA families? | OCP/FAST baselines: ART, GA/search, similarity/diversity, OCP | APFD/APFDc, recall@k, redundancy@k, prioritization time | same benchmark family only |
+| RQ6 | How does ShapTCP compare to broader matrix SOTA families? | OCP/FAST baselines: ART, genetic/search where verified, similarity/diversity, OCP | benchmark-native rank/coverage metrics, fault APFD only when semantics permit, recall@k, redundancy@k, prioritization time | same benchmark family only |
 | RQ7 | Can ShapTCP transfer to CI-history settings? | TCPFramework/RTPTorrent or RETECS/tp_rl adapters | rAPFDc, NTR, ATR, NAPFD | second-stage adapter study |
 
 ## Stage 0: Source Audit and Reproducibility Lock
@@ -156,9 +156,9 @@ Priority:
 | Priority | Benchmark | Why | Accuracy Gate |
 |---|---|---|---|
 | P0 | SIR small subjects | Closest to `test -> fault` if fault matrices are available/generated | confirm object package format and license |
-| P1 | OCP | Strong coverage/mutation artifact with APFD/time/order results | confirm raw matrix path and method-to-result mapping |
+| P1 | OCP | Strong coverage/mutation artifact with upstream rank/effectiveness/order result files | confirm raw matrix path and method-to-result mapping; do not treat coverage-style APFD names as true fault APFD |
 | P2 | FAST | Similarity/diversity artifact with fault matrix, coverage info, and black-box representation | isolate old Python/scipy environment |
-| P3 | Defects4J small subset | High community recognition | JDK11/Docker setup and matrix-generation protocol |
+| P3 | Defects4J small subset | High community recognition | JDK11/Docker setup, candidate-test universe, and per-bug rank aggregation protocol |
 
 Baseline expansion:
 
@@ -166,7 +166,8 @@ Baseline expansion:
 - OCP, if running OCP artifact.
 - FAST variants, if running FAST artifact.
 - ART-F/ART-D, from FAST/OCP artifact where available.
-- GA/search-based, from FAST/OCP artifact where available.
+- genetic/search-based from OCP or a separately verified implementation;
+- FAST `GA` only as Greedy Additional if that artifact name is used.
 
 Recommended first paper table:
 
@@ -174,7 +175,7 @@ Recommended first paper table:
 |---|---|---|---|
 | SIR/OCP small set | random, total, additional, ShapTCP | APFD, recall@k, rare recall@k, redundancy@k | random >= 30 |
 | duration-aware subset | additional, cost-additional, ShapTCP, cost-ShapTCP, shortest | APFDc, time-budget recall | random >= 30 |
-| FAST/OCP stronger set | artifact baselines + ShapTCP | benchmark-native APFD/APFDc plus our redundancy metrics | artifact protocol |
+| FAST/OCP stronger set | artifact baselines + ShapTCP | benchmark-native metrics plus our redundancy metrics; APFD/APFDc only under verified semantics/durations | artifact protocol |
 
 Exit criteria:
 
@@ -203,9 +204,14 @@ Protocol options:
 
 | Matrix Type | Construction | Pros | Cons |
 |---|---|---|---|
-| trigger matrix | `tests.trigger` per bug | fast and real-bug grounded | sparse, only exposing tests |
+| per-bug trigger rank | candidate universe from `tests.all`/`tests.relevant`, positives from `tests.trigger` | fast and real-bug grounded | evaluates one buggy revision at a time |
+| cross-bug trigger matrix | union of candidates across bug revisions, columns are bug ids | adapter smoke and metadata sanity | not a standard single-version multi-fault TCP instance |
 | coverage matrix | `defects4j coverage` per test/suite | closer to coverage TCP | coverage entity is not fault |
 | mutation matrix | `defects4j mutation` per test/suite | strong fault proxy | slow and CPU/disk heavy |
+
+Hard guardrail: never build a reportable Defects4J candidate set from only
+`tests.trigger`. That creates a nearly trivial ranking universe and is unfair
+to every baseline.
 
 First subset:
 

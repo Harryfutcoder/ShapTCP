@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from typing import Iterable, Mapping
 
+from .durations import normalize_durations
 from .types import FaultId, TestId
 
 
@@ -74,6 +75,7 @@ def cost_aware_additional_coverage_order(
         raise ValueError("cost_exponent must be non-negative")
 
     normalized = _normalize_matrix(test_to_faults)
+    costs = normalize_durations(durations, normalized, context="durations")
     remaining_tests = set(normalized)
     covered_faults: set[FaultId] = set()
     order: list[TestId] = []
@@ -87,14 +89,12 @@ def cost_aware_additional_coverage_order(
         best_key: tuple[float, float, float] | None = None
 
         for test in sorted(remaining_tests, key=str):
-            duration = float(durations.get(test, 1.0))
-            if duration < 0:
-                raise ValueError(f"duration for {test!r} must be non-negative")
+            duration = costs[test]
             if time_budget is not None and cumulative_time + duration > time_budget:
                 continue
 
             new_count = len(normalized[test] - covered_faults)
-            adjusted = new_count / (max(duration, 1e-12) ** cost_exponent)
+            adjusted = new_count / (duration**cost_exponent)
             key = (adjusted, float(new_count), -duration)
             if best_key is None or key > best_key:
                 best_key = key
@@ -106,7 +106,7 @@ def cost_aware_additional_coverage_order(
         remaining_tests.remove(best_test)
         order.append(best_test)
         covered_faults.update(normalized[best_test])
-        cumulative_time += float(durations.get(best_test, 1.0))
+        cumulative_time += costs[best_test]
 
     return tuple(order)
 
@@ -117,10 +117,8 @@ def shortest_duration_order(
 ) -> tuple[TestId, ...]:
     """Sort tests by duration, then by id."""
 
-    for test, duration in durations.items():
-        if test in test_to_faults and float(duration) < 0:
-            raise ValueError(f"duration for {test!r} must be non-negative")
-    return tuple(sorted(test_to_faults, key=lambda test: (float(durations.get(test, 1.0)), str(test))))
+    costs = normalize_durations(durations, test_to_faults, context="durations")
+    return tuple(sorted(test_to_faults, key=lambda test: (costs[test], str(test))))
 
 
 def _reverse_sort_key(value: TestId) -> str:

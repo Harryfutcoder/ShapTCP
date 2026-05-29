@@ -232,7 +232,10 @@ subject to |S| <= k or cost(S) <= B
 For deterministic coverage, `g(S)` is monotone submodular. Greedy selection has
 the standard `(1 - 1/e)` guarantee for fixed weighted maximum coverage under a
 cardinality budget. This is a subset/prefix coverage guarantee, not an APFD
-guarantee over the entire sequence.
+guarantee over the entire sequence. The guarantee does not automatically apply
+to the ratio heuristic `score / c_i^alpha` used in cost-aware variants or to
+time-budget/knapsack settings unless a matching budgeted maximum-coverage
+algorithm is implemented.
 
 For ShapTCP, this surrogate is:
 
@@ -242,6 +245,12 @@ g_shap(S) = sum_{e covered by S} w_e / |T_e|
 
 where `T_e = {i in T : M[i,e] = 1}`. Greedy ShapTCP selects the largest
 remaining marginal gain of `g_shap`, optionally divided by cost.
+
+This separates two objectives that must not be conflated: the closed-form
+Shapley value is exact for the original weighted coverage game
+`v(S)=sum_e w_e 1[e covered]`; ShapTCP then uses those attributions to define a
+new scarcity-adjusted surrogate `g_shap`. ShapTCP is not claiming that residual
+greedy continues to optimize the original unadjusted coverage utility.
 
 ## Metric Definitions and Use
 
@@ -333,6 +342,8 @@ score_i(S) / c_i^alpha
 ```
 
 where `alpha=0` is pure ShapTCP and `alpha=1` is score per unit cost.
+This cost-aware mode is an empirical heuristic unless paired with a formal
+budgeted maximum-coverage solver and proof.
 
 The implementation assumes:
 

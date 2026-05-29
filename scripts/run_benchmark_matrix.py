@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 from shaptcp import (
@@ -37,8 +38,13 @@ def main() -> None:
     parser.add_argument("--result-status", default="local_smoke_only")
     parser.add_argument("--ground-truth-level", default="unverified")
     parser.add_argument("--duration-source", default="not_available")
-    parser.add_argument("--budget-policy", default="count")
+    parser.add_argument("--budget-policy", choices=("full", "count"))
     parser.add_argument("--allow-unverified", action="store_true", help="Allow --semantics unverified.")
+    parser.add_argument(
+        "--allow-diagnostic-apfd",
+        action="store_true",
+        help="Emit APFD/APFDc even when metadata marks the run as non-reportable. Never use this for paper tables.",
+    )
     parser.add_argument("--durations", type=Path, help="Optional CSV with test_id,duration.")
     parser.add_argument("--test-ids", type=Path, help="Optional newline file of row/test ids.")
     parser.add_argument("--fault-ids", type=Path, help="Optional newline file of column/entity ids.")
@@ -48,50 +54,82 @@ def main() -> None:
     args = parser.parse_args()
     if args.semantics == "unverified" and not args.allow_unverified:
         raise SystemExit("Refusing to run with --semantics unverified. Pass a verified value or --allow-unverified.")
+    budget_policy = args.budget_policy or ("count" if args.budget_count is not None else "full")
+    if budget_policy == "full" and args.budget_count is not None:
+        raise SystemExit("--budget-policy full cannot be combined with --budget-count")
+    if budget_policy == "count" and args.budget_count is None:
+        raise SystemExit("--budget-policy count requires --budget-count")
 
     test_ids = load_id_file(args.test_ids) if args.test_ids else load_optional_sidecar(args.matrix, ".tests")
     fault_ids = load_id_file(args.fault_ids) if args.fault_ids else load_optional_sidecar(args.matrix, ".entities")
     dataset = load_binary_incidence_matrix(args.matrix, test_ids=test_ids, fault_ids=fault_ids)
     durations = load_durations(args.durations) if args.durations else {}
     orders = build_orders(dataset.test_to_faults, durations, args.budget_count, args.random_seeds)
+    apfd_allowed = args.allow_diagnostic_apfd or reportable_apfd_scope(args.semantics, args.ground_truth_level)
 
-    print(
-        "run_id,benchmark,subject,semantics,evidence_level,claim_scope,"
-        "source_status,matrix_status,result_status,ground_truth_level,duration_source,"
-        "k,budget_policy,budget_count,random_seeds,method,selected,"
-        "apfd,apfdc,recall_at_k,rare_recall_at_k,redundancy_at_k"
+    writer = csv.writer(sys.stdout)
+    writer.writerow(
+        [
+            "run_id",
+            "benchmark",
+            "subject",
+            "semantics",
+            "evidence_level",
+            "claim_scope",
+            "source_status",
+            "matrix_status",
+            "result_status",
+            "ground_truth_level",
+            "duration_source",
+            "k",
+            "budget_policy",
+            "budget_count",
+            "random_seeds",
+            "method",
+            "random_seed",
+            "selected",
+            "apfd",
+            "apfdc",
+            "recall_at_k",
+            "rare_recall_at_k",
+            "redundancy_at_k",
+        ]
     )
     for name, order in orders.items():
+        method_name, random_seed = split_method_seed(name)
         full_order = len(order) == len(dataset.test_ids)
-        apfd_value = apfd(order, dataset.test_to_faults) if full_order else float("nan")
-        apfdc_value = apfdc(order, dataset.test_to_faults, durations) if durations and full_order else float("nan")
-        print(
-            ",".join(
-                [
-                    args.run_id,
-                    args.benchmark,
-                    args.subject,
-                    args.semantics,
-                    args.evidence_level,
-                    args.claim_scope,
-                    args.source_status,
-                    args.matrix_status,
-                    args.result_status,
-                    args.ground_truth_level,
-                    args.duration_source,
-                    str(args.k),
-                    args.budget_policy,
-                    "" if args.budget_count is None else str(args.budget_count),
-                    str(args.random_seeds),
-                    name,
-                    str(len(order)),
-                    fmt(apfd_value),
-                    fmt(apfdc_value),
-                    fmt(fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
-                    fmt(rare_fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
-                    fmt(redundancy_at_k(order, dataset.test_to_faults, k=args.k)),
-                ]
-            )
+        apfd_value = apfd(order, dataset.test_to_faults) if apfd_allowed and full_order else float("nan")
+        apfdc_value = (
+            apfdc(order, dataset.test_to_faults, durations)
+            if apfd_allowed and durations and full_order
+            else float("nan")
+        )
+        writer.writerow(
+            [
+                args.run_id,
+                args.benchmark,
+                args.subject,
+                args.semantics,
+                args.evidence_level,
+                args.claim_scope,
+                args.source_status,
+                args.matrix_status,
+                args.result_status,
+                args.ground_truth_level,
+                args.duration_source,
+                str(args.k),
+                budget_policy,
+                "" if args.budget_count is None else str(args.budget_count),
+                str(args.random_seeds),
+                method_name,
+                random_seed,
+                str(len(order)),
+                fmt(apfd_value),
+                fmt(apfdc_value),
+                fmt(fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
+                fmt(rare_fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
+                fmt(redundancy_at_k(order, dataset.test_to_faults, k=args.k)),
+            ]
         )
 
 
@@ -130,6 +168,21 @@ def load_durations(path: Path) -> dict[str, float]:
         for row in reader:
             durations[row["test_id"]] = float(row["duration"])
     return durations
+
+
+def split_method_seed(name: str) -> tuple[str, str]:
+    if name.startswith("random_"):
+        return "random", name.removeprefix("random_")
+    return name, ""
+
+
+def reportable_apfd_scope(semantics: str, ground_truth_level: str) -> bool:
+    """Return whether the runner may emit true-fault APFD columns by default."""
+
+    return (semantics, ground_truth_level) in {
+        ("fault", "true_fault"),
+        ("bug", "execution_derived_bug"),
+    }
 
 
 def load_optional_sidecar(matrix_path: Path, suffix: str) -> tuple[str, ...] | None:

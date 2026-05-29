@@ -1,9 +1,14 @@
-"""Run ShapTCP and core matrix baselines on a binary incidence matrix."""
+"""Run ShapTCP and core matrix baselines on a binary incidence matrix.
+
+This is a local diagnostic script with no source/semantics metadata gate. Use
+``run_benchmark_matrix.py`` for reportable experiments.
+"""
 
 from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 from shaptcp import (
@@ -33,11 +38,23 @@ def main() -> None:
 
     dataset = load_binary_incidence_matrix(args.matrix)
     durations = _load_durations(args.durations) if args.durations else {}
+    if args.time_budget is not None and not durations:
+        raise SystemExit("--time-budget requires --durations so every method uses the same cost source")
 
     orders = {
-        "total": _clip(total_coverage_order(dataset.test_to_faults), args.budget_count),
-        "additional": additional_coverage_order(dataset.test_to_faults, budget_count=args.budget_count),
-        "static_shapley": _clip(static_shapley_order(dataset.test_to_faults), args.budget_count),
+        "total": _apply_budgets(total_coverage_order(dataset.test_to_faults), args.budget_count, args.time_budget, durations),
+        "additional": _apply_budgets(
+            additional_coverage_order(dataset.test_to_faults, budget_count=args.budget_count),
+            None,
+            args.time_budget,
+            durations,
+        ),
+        "static_shapley": _apply_budgets(
+            static_shapley_order(dataset.test_to_faults),
+            args.budget_count,
+            args.time_budget,
+            durations,
+        ),
         "shaptcp": shaptcp_order(
             dataset.test_to_faults,
             budget_count=args.budget_count,
@@ -47,7 +64,12 @@ def main() -> None:
     }
 
     if durations:
-        orders["shortest"] = _clip(shortest_duration_order(dataset.test_to_faults, durations), args.budget_count)
+        orders["shortest"] = _apply_budgets(
+            shortest_duration_order(dataset.test_to_faults, durations),
+            args.budget_count,
+            args.time_budget,
+            durations,
+        )
         orders["cost_additional"] = cost_aware_additional_coverage_order(
             dataset.test_to_faults,
             durations,
@@ -62,23 +84,22 @@ def main() -> None:
             cost_exponent=1.0,
         ).order
 
-    print("method,selected,apfd,apfdc,recall_at_k,rare_recall_at_k,redundancy_at_k")
+    writer = csv.writer(sys.stdout)
+    writer.writerow(["method", "selected", "apfd", "apfdc", "recall_at_k", "rare_recall_at_k", "redundancy_at_k"])
     for name, order in orders.items():
         full_order = len(order) == len(dataset.test_ids)
         apfd_value = apfd(order, dataset.test_to_faults) if full_order else float("nan")
         apfdc_value = apfdc(order, dataset.test_to_faults, durations) if durations and full_order else float("nan")
-        print(
-            ",".join(
-                [
-                    name,
-                    str(len(order)),
-                    _fmt(apfd_value),
-                    _fmt(apfdc_value),
-                    _fmt(fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
-                    _fmt(rare_fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
-                    _fmt(redundancy_at_k(order, dataset.test_to_faults, k=args.k)),
-                ]
-            )
+        writer.writerow(
+            [
+                name,
+                str(len(order)),
+                _fmt(apfd_value),
+                _fmt(apfdc_value),
+                _fmt(fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
+                _fmt(rare_fault_recall_at_k(order, dataset.test_to_faults, k=args.k)),
+                _fmt(redundancy_at_k(order, dataset.test_to_faults, k=args.k)),
+            ]
         )
 
 
@@ -104,6 +125,27 @@ def _clip(order: tuple[str, ...], budget_count: int | None) -> tuple[str, ...]:
     if budget_count is None:
         return order
     return order[:budget_count]
+
+
+def _apply_budgets(
+    order: tuple[str, ...],
+    budget_count: int | None,
+    time_budget: float | None,
+    durations: dict[str, float],
+) -> tuple[str, ...]:
+    clipped = _clip(order, budget_count)
+    if time_budget is None:
+        return clipped
+
+    selected: list[str] = []
+    elapsed = 0.0
+    for test in clipped:
+        duration = durations[test]
+        if elapsed + duration > time_budget:
+            break
+        selected.append(test)
+        elapsed += duration
+    return tuple(selected)
 
 
 if __name__ == "__main__":

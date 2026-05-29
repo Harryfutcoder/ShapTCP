@@ -25,6 +25,12 @@ coverage-game Shapley contribution is:
 phi_i = sum_{f in F_i} weight_f / |T_f|
 ```
 
+This closed form is exact for the original weighted coverage game
+`v(S)=sum_f weight_f * 1[f covered by S]`. ShapTCP then uses these exact
+attributions as fixed scarcity weights to define a new residual surrogate; the
+ordering below is not presented as greedy optimization of the original
+unweighted coverage utility.
+
 The implemented ordering is:
 
 ```text
@@ -51,9 +57,10 @@ The risky formulation is a "dynamic conditional Shapley" degree:
 d_f(S) = number of remaining tests that can still cover f
 ```
 
-In deterministic coverage, if `f` is still residual, then no selected test has
-covered it. Therefore all original tests that cover `f` are still unselected,
-and `d_f(S)` remains `|T_f|`. The degree does not shrink dynamically.
+Under deterministic coverage and no feasibility pruning other than already
+selected tests, if `f` is still residual, then no selected test has covered it.
+Therefore all original tests that cover `f` are still unselected, and `d_f(S)`
+remains `|T_f|`. The degree does not shrink dynamically in that setting.
 
 The corrected method is Shapley-weighted residual coverage:
 
@@ -75,6 +82,8 @@ Defensible theory language:
 - coverage is monotone submodular;
 - greedy has the standard guarantee for fixed weighted coverage subset
   objectives;
+- the guarantee is for cardinality-budget fixed weighted coverage, not for the
+  ratio heuristic `score / c_i^alpha` or arbitrary time-budget truncation;
 - TCP's classic APFD objective is a sequence-level first-detection objective,
   whereas ShapTCP optimizes a prefix coverage surrogate;
 - APFD/APFDc improvements are empirical claims;
@@ -99,6 +108,9 @@ The required engineering layer is root-cause proxy construction:
 - otherwise cluster failure signatures by co-failing test sets;
 - report results separately for raw signatures and clustered proxies when
   using CI logs.
+- record the clustering threshold, time window, linkage rule, cluster-size
+  distribution, and raw-vs-clustered sensitivity so the clustering layer is not
+  an undocumented tuning freedom.
 
 The current repository includes the first deterministic baseline for this:
 

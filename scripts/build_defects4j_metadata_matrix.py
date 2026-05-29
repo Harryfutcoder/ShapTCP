@@ -3,6 +3,9 @@
 This does not checkout projects or execute tests. It is useful for adapter
 smoke tests and source audits, but it should be reported separately from
 execution-derived coverage or mutation matrices.
+
+Rows are only metadata-listed triggering tests, so the output is not a fair
+candidate test universe for APFD or SOTA claims.
 """
 
 from __future__ import annotations
@@ -77,6 +80,22 @@ def write_matrix(trigger_map: dict[str, set[str]], output: Path) -> None:
     output.with_suffix(output.suffix + ".tests").write_text("\n".join(tests) + "\n", encoding="utf-8")
     output.with_suffix(output.suffix + ".entities").write_text(
         "\n".join(f"bug_{bug}" for bug in bugs) + "\n",
+        encoding="utf-8",
+    )
+    output.with_suffix(output.suffix + ".protocol.md").write_text(
+        "\n".join(
+            [
+                "# Defects4J Metadata Trigger Matrix Protocol",
+                "",
+                "- rows: union of metadata-listed triggering tests only",
+                "- columns: requested Defects4J bug ids",
+                "- value: test is listed in Defects4J `trigger_tests` metadata",
+                "",
+                "This is an adapter smoke matrix. It is not a reportable TCP",
+                "candidate universe and must not be used for APFD/SOTA claims.",
+                "",
+            ]
+        ),
         encoding="utf-8",
     )
 

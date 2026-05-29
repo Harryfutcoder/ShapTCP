@@ -16,6 +16,12 @@ class MetricsTests(unittest.TestCase):
     def test_apfd_returns_nan_for_empty_fault_set(self):
         self.assertTrue(math.isnan(apfd(("A",), {"A": set()})))
 
+    def test_apfd_rejects_incomplete_order_by_default(self):
+        matrix = {"A": {"f1"}, "B": {"f2"}}
+
+        with self.assertRaises(ValueError):
+            apfd(("A",), matrix)
+
     def test_apfdc_prefers_fast_fault_detection_when_faults_equal(self):
         matrix = {
             "slow": {"f1"},
@@ -27,6 +33,18 @@ class MetricsTests(unittest.TestCase):
             apfdc(("fast", "slow"), matrix, durations),
             apfdc(("slow", "fast"), matrix, durations),
         )
+
+    def test_apfdc_rejects_missing_duration(self):
+        matrix = {"A": {"f1"}, "B": {"f2"}}
+
+        with self.assertRaises(ValueError):
+            apfdc(("A", "B"), matrix, {"A": 1.0})
+
+    def test_apfdc_rejects_zero_duration(self):
+        matrix = {"A": {"f1"}}
+
+        with self.assertRaises(ValueError):
+            apfdc(("A",), matrix, {"A": 0.0})
 
     def test_time_to_first_fault(self):
         matrix = {

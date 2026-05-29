@@ -151,8 +151,10 @@ Baselines:
 
 Metrics:
 
-- synthetic entity APFD, for mechanism sanity only;
-- APFDc when synthetic durations exist;
+- APFD-like entity rank score only if explicitly labeled as synthetic and
+  non-reportable;
+- APFDc-like cost score only when synthetic durations exist, again
+  non-reportable;
 - recall@k;
 - rare_recall@k;
 - redundancy@k;
@@ -191,8 +193,8 @@ Datasets:
 |---|---|---|---|
 | P0 | SIR small subjects | fault or coverage matrix, if exposed/generated | source access still needed |
 | P1 | OCP | coverage/mutation artifact; raw matrix path still unconfirmed | source audited, not matrix-ready |
-| P2 | FAST | fault matrix and coverage/black-box representations, after source download | source needed |
-| P3 | Defects4J trigger metadata | tests x bug ids | metadata adapter smoke works |
+| P2 | FAST | fault matrix and coverage/black-box representations, after source checkout | source audited; write loader and confirm key/value direction |
+| P3 | Defects4J trigger metadata | per-bug trigger-test metadata across separate buggy revisions | adapter smoke only, not a standard multi-fault TCP instance |
 
 Baselines:
 
@@ -205,8 +207,11 @@ Baselines:
 
 Metrics:
 
-- APFD only for verified true fault/bug matrices, or explicitly labeled
-  mutant/entity APFD for proxy matrices;
+- APFD only for verified true fault/bug matrices;
+- APFD over mutants only when explicitly named as mutant APFD / APFD over
+  mutants;
+- coverage entities must use coverage/entity recall or first-coverage-rank
+  metrics, not true APFD terminology;
 - recall@k;
 - rare_recall@k with degree thresholds 1, 2, and 3;
 - redundancy@k;
@@ -317,13 +322,15 @@ Metrics:
 - degree distribution before and after clustering;
 - rare_recall@k by degree bucket;
 - redundancy@k;
-- APFD/APFDc when fault/mutant semantics support it;
+- APFD only when true fault/bug semantics support it; mutant APFD only when
+  explicitly named as APFD over mutants;
+- APFDc only with verified per-test execution durations;
 - sensitivity of ranking under representation changes.
 
 Datasets:
 
 - OCP for coverage/mutant-style representations after raw matrix confirmation;
-- Defects4J for bug-trigger matrix, then coverage/mutation later;
+- Defects4J for per-bug trigger-rank aggregation, then coverage/mutation later;
 - TCPFramework/RTPTorrent only for CI failure proxies.
 
 Claim boundary:
@@ -346,7 +353,8 @@ Baseline families:
 |---|---|---|
 | Coverage greedy | total, additional | Rothermel et al.; local implementation |
 | Diversity/randomized | ART-F, ART-D | Jiang et al.; FAST artifact where available |
-| Search-based | GA/search-based TCP | Li et al.; FAST/OCP artifact where available |
+| Search-based | Genetic/search-based TCP | Li et al.; OCP artifact or a separately implemented search baseline |
+| FAST greedy family | FAST artifact `GT`, `GA`, `GA-S` where verified | In FAST naming, `GA` denotes Greedy Additional, not genetic algorithm |
 | Similarity-based | FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all | FAST ICSE 2018 artifact, `icse18-fast/FAST` |
 | OCP | OCP and OCP-related comparators | OCP artifact |
 
@@ -357,7 +365,10 @@ Datasets:
 
 Metrics:
 
-- benchmark-native APFD/APFDc;
+- benchmark-native rank/coverage metrics with the artifact's own names;
+- fault APFD only when columns are verified true faults/bugs;
+- APFDc only when per-test execution durations, not prioritization runtimes,
+  are aligned with all candidate tests;
 - our rare_recall@k and redundancy@k on the same matrix;
 - prioritization time;
 - per-subject ranks.
@@ -391,6 +402,18 @@ Sub-experiments:
 | E5c | coverage matrix | medium | coverage-entity evidence |
 | E5d | mutation matrix | heavy | mutant/fault-proxy evidence |
 
+Defects4J warning:
+
+- each Defects4J bug id is a distinct buggy revision (`<id>b`), not one fault
+  inside a shared multi-fault program version;
+- a matrix whose columns are several Defects4J bug ids is therefore a
+  cross-version metadata artifact, useful for adapter smoke tests or per-bug
+  rank aggregation, not a standard single-suite multi-fault TCP instance;
+- reportable trigger experiments must evaluate each bug revision with its own
+  candidate test universe and aggregate triggering-test rank, TTFF, or recall.
+- the candidate universe must be `tests.all`, `tests.relevant`, or another
+  documented executable test set; it must not contain only `tests.trigger`.
+
 First projects:
 
 - `Lang`, active bugs `1 3 4` for smoke;
@@ -418,6 +441,7 @@ PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
   --project Lang \
   --bugs 1 3 4 \
   --work-dir data/work/defects4j \
+  --candidate-property tests.all \
   --output data/processed/defects4j/Lang_trigger_1_3_4.txt \
   --execute
 ```
@@ -425,7 +449,8 @@ PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
 Claim boundary:
 
 - metadata trigger matrix is `pipeline_validation`;
-- execution-derived trigger matrix can be public benchmark evidence;
+- execution-derived trigger data can be public benchmark evidence only as
+  per-bug rank/TTFF/recall aggregation with a documented candidate universe;
 - coverage/mutation matrices require separate protocol notes.
 
 ## Experiment 6: CI-History Transfer
@@ -524,6 +549,7 @@ Red light:
 1. Run `audit_benchmarks.py` and fill source notes.
 2. Confirm one real dense matrix from SIR, OCP, or FAST.
 3. Run Experiment 1 on one subject.
-4. Run Defects4J execution-derived trigger matrix for `Lang 1 3 4`.
+4. Run Defects4J execution-derived per-bug trigger-rank aggregation for
+   `Lang 1 3 4`.
 5. Add artifact-native OCP/FAST baselines only after raw matrix protocol is
    confirmed.

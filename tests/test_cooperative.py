@@ -69,7 +69,10 @@ class CooperativeTests(unittest.TestCase):
         dense_first = ("A", "C")
 
         self.assertEqual(unique_order, ("C", "A"))
-        self.assertLess(apfd(unique_order, matrix), apfd(dense_first, matrix))
+        self.assertLess(
+            apfd(unique_order, matrix, require_complete=False),
+            apfd(dense_first, matrix, require_complete=False),
+        )
 
     def test_additional_coverage_baseline_matches_expected(self):
         matrix = {
@@ -120,6 +123,26 @@ class CooperativeTests(unittest.TestCase):
 
         self.assertEqual(pure[0], "slow")
         self.assertEqual(cost[0], "fast")
+
+    def test_pure_shaptcp_duration_does_not_break_ties(self):
+        matrix = {
+            "A": {"f1"},
+            "B": {"f2"},
+        }
+        durations = {"A": 10.0, "B": 1.0}
+
+        order = shaptcp_order(matrix, durations=durations, cost_exponent=0.0).order
+
+        self.assertEqual(order, ("A", "B"))
+
+    def test_duration_inputs_must_be_complete_and_positive(self):
+        matrix = {"A": {"f1"}, "B": {"f2"}}
+
+        with self.assertRaises(ValueError):
+            shaptcp_order(matrix, durations={"A": 1.0})
+
+        with self.assertRaises(ValueError):
+            shaptcp_order(matrix, durations={"A": 1.0, "B": 0.0})
 
     def test_recall_and_redundancy_metrics(self):
         matrix = {

@@ -72,10 +72,12 @@ Each reported run must also state:
 
 Run in this order unless a source is blocked:
 
-1. `Defects4J metadata trigger matrix`: laptop-safe adapter validation.
+1. `Defects4J metadata trigger matrix`: laptop-safe adapter validation only;
+   no APFD performance claim.
 2. `SIR` or `FAST` small matrix: first real public matrix if source is ready.
 3. `OCP`: after locating the original raw dense matrix used by the artifact.
-4. `Defects4J execution trigger matrix`: first execution-derived bug matrix.
+4. `Defects4J execution trigger ranks`: first execution-derived bug evidence,
+   using `tests.all` or `tests.relevant` as the candidate universe.
 5. `Defects4J coverage/mutation`: later, heavier public evidence.
 6. `TCPFramework / RETECS / tp_rl / DeepOrder / TCP-CI / AutoTCP`: CI-history
    extension and broader learning baselines.
@@ -212,7 +214,7 @@ PYTHONPATH=src python3 scripts/build_defects4j_metadata_matrix.py \
   --output data/processed/defects4j/Lang_metadata_trigger_1_3_4.txt
 ```
 
-Execution-derived trigger matrix:
+Execution-derived trigger/rank data:
 
 ```bash
 PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
@@ -220,9 +222,14 @@ PYTHONPATH=src python3 scripts/build_defects4j_trigger_matrix.py \
   --project Lang \
   --bugs 1 3 4 \
   --work-dir data/work/defects4j \
+  --candidate-property tests.all \
   --output data/processed/defects4j/Lang_trigger_1_3_4.txt \
   --execute
 ```
+
+For reportable Defects4J results, the candidate universe must be `tests.all`,
+`tests.relevant`, or a documented executable suite. `tests.trigger`-only rows
+are adapter smoke only.
 
 Run it:
 
@@ -233,14 +240,17 @@ PYTHONPATH=src python3 scripts/run_benchmark_matrix.py \
   --subject Lang_1_3_4_trigger \
   --semantics bug \
   --run-id defects4j-lang-1-3-4-trigger \
-  --evidence-level public_benchmark \
-  --claim-scope execution_derived_trigger_matrix \
+  --evidence-level pipeline_validation \
+  --claim-scope execution_trigger_adapter_smoke \
   --source-status tool-audited \
   --matrix-status verified \
-  --result-status reportable \
-  --ground-truth-level execution_derived_bug \
+  --result-status local_smoke_only \
+  --ground-truth-level true_bug_metadata \
   --k 10
 ```
+
+Do not promote the cross-bug trigger matrix to a paper table. Implement or run a
+per-bug rank aggregator before claiming Defects4J public benchmark evidence.
 
 Do not start mutation analysis until trigger and coverage matrices are stable.
 
@@ -253,7 +263,8 @@ Do not start mutation analysis until trigger and coverage matrices are stable.
 | ShapTCP ablation | static_shapley | ShapTCP theory audit | local implementation | Experiment 1 |
 | Cost-aware | cost_additional, shortest, cost_shaptcp | APFDc/cost-aware TCP literature | local implementation | Experiment 2 |
 | Diversity | ART-F, ART-D | Jiang et al., ASE 2009 | FAST/OCP artifact where verified | Experiment 4 |
-| Search | GA/search-based TCP | Li et al., TSE 2007 | FAST/OCP artifact where verified | Experiment 4 |
+| Search | Genetic/search-based TCP | Li et al., TSE 2007 | OCP artifact or separately verified implementation | Experiment 4 |
+| FAST greedy | FAST `GT`, `GA`, `GA-S` | FAST artifact naming | FAST artifact | Experiment 4; `GA` means Greedy Additional, not genetic algorithm |
 | Similarity | FAST-pw, FAST-one, FAST-log, FAST-sqrt, FAST-all | Miranda et al., ICSE 2018 | FAST artifact | Experiment 4 |
 | OCP | OCP and paper comparators | Zhang et al., JSS 2022 | OCP artifact | Experiment 4 |
 | CI-history RL | RETECS, tp_rl | Spieker et al.; Bagherzadeh et al. | RETECS, tp_rl repos | Experiment 6 only |

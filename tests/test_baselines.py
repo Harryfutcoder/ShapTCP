@@ -32,6 +32,15 @@ class BaselineTests(unittest.TestCase):
 
         self.assertEqual(shortest_duration_order(matrix, durations), ("a", "c", "b"))
 
+    def test_duration_baselines_reject_incomplete_or_zero_costs(self):
+        matrix = {"a": {"f1"}, "b": {"f2"}}
+
+        with self.assertRaises(ValueError):
+            shortest_duration_order(matrix, {"a": 1.0})
+
+        with self.assertRaises(ValueError):
+            cost_aware_additional_coverage_order(matrix, {"a": 1.0, "b": 0.0})
+
 
 if __name__ == "__main__":
     unittest.main()
