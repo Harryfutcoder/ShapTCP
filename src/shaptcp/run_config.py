@@ -111,8 +111,14 @@ def validate_run_config(config: Mapping[str, Any], *, repo_root: Path | None = N
     if "shaptcp" in methods and "additional" not in methods:
         errors.append("shaptcp runs must include additional as the closest baseline")
 
+    if "guarded_shaptcp" in methods and "additional" not in methods:
+        errors.append("guarded_shaptcp runs must include additional as the guard baseline")
+
     if "static_shapley" not in methods and "shaptcp" in methods:
         errors.append("shaptcp runs should include static_shapley as the attribution ablation")
+
+    if "static_shapley" not in methods and "guarded_shaptcp" in methods:
+        errors.append("guarded_shaptcp runs should include static_shapley as the attribution ablation")
 
     random_seeds = int(protocol.get("random_seeds", 0) or 0)
     if evidence_level in PUBLIC_EVIDENCE_LEVELS and "random" in methods and random_seeds < 30:

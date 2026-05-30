@@ -1,8 +1,9 @@
 # Theory Review Notes
 
-This document is the compressed reviewer-facing version of the ShapTCP and
-future GuardTCP theory audit. It records the claims we can defend, the claims
-we should avoid, and how the current code maps to the corrected theory.
+This document is the compressed reviewer-facing version of the ShapTCP,
+Guarded ShapTCP, and future GuardTCP theory audit. It records the claims we
+can defend, the claims we should avoid, and how the current code maps to the
+corrected theory.
 
 ## Current ShapTCP Position
 
@@ -48,6 +49,39 @@ Assumptions for this theory statement:
 - fixed candidate test set;
 - entity semantics documented before evaluation;
 - no current/future-cycle information in history-based settings.
+
+## Guarded ShapTCP Position
+
+The two-matrix FAST diagnosis showed that pure scarcity can be too aggressive
+when the input matrix is observable coverage and the evaluation matrix is hidden
+faults. Guarded ShapTCP therefore treats classic additional coverage as a
+first-rank stability guard and uses Shapley scarcity only inside a dynamically
+relaxed near-best additional-gain candidate pool.
+
+For each step:
+
+```text
+a_i(S) = |F_i \ covered(S)|
+s_i(S) = sum_{f in F_i \ covered(S)} weight_f / |T_f|
+a*(S) = max_i a_i(S)
+lambda_t = lambda_min + (lambda_max - lambda_min) * (1 - a*(S) / a*_0)^gamma
+Pool(S) = {i : a_i(S) >= (1 - lambda_t) * a*(S)}
+pi_t = argmax_{i in Pool(S)} (s_i(S), a_i(S), stable_test_id_tiebreak)
+```
+
+The default implementation uses `lambda_min=0`, `lambda_max=0.2`, and
+`gamma=1`. This is not an APFD theorem. It is a constrained scheduling policy
+motivated by the observed mismatch between observable coverage rarity and
+hidden fault rarity. Its defensible claim is narrower:
+
+```text
+Guarded ShapTCP preserves additional-coverage first-rank stability more
+strongly than pure ShapTCP while still allowing scarcity-aware redundancy
+reduction among near-equivalent additional-coverage choices.
+```
+
+Use `lambda_max=0` as the pure additional endpoint and larger values as a
+trade-off analysis toward pure scarcity-guided behavior.
 
 ## Paper 1 Audit: Dynamic Degree Collapse
 
@@ -164,6 +198,7 @@ Future implementation notes:
 | Risk | Compressed Fix | Code/Doc Status |
 |---|---|---|
 | Dynamic degree collapse | fixed `1 / |T_f|` Shapley weights plus residual coverage | implemented in `shaptcp_order` |
+| Pure scarcity harms first-rank stability | additional-gain candidate pool with dynamic Shapley reranking | implemented in `guarded_shaptcp_order` |
 | Static attribution confused with ordering | add `static_shapley_order` as ablation | implemented and tested |
 | APFD guarantee overclaim | APFD/APFDc are empirical metrics only | documented in README and plan |
 | Fault explosion | co-failure clustering or benchmark ground truth ids | clustering utilities implemented |
@@ -184,3 +219,9 @@ Recommended limitation sentence:
 > We do not claim an approximation guarantee for APFD or for deterministic
 > projections of future adversarial mixed strategies; these are evaluated
 > empirically under benchmark-specific protocols.
+
+Recommended guarded-method sentence:
+
+> Guarded ShapTCP uses additional coverage as a first-rank stability guard and
+> applies exact Shapley scarcity only within a dynamically relaxed near-optimal
+> additional-gain candidate pool.

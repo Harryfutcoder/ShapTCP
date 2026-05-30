@@ -13,6 +13,12 @@ Primary claim:
 > while improving early scarce-entity recall and reducing redundant early
 > coverage.
 
+Current candidate main algorithm after the two-matrix FAST diagnosis:
+
+> Guarded ShapTCP uses classic additional coverage as a first-rank stability
+> guard and applies Shapley scarcity only within a dynamically relaxed
+> near-best additional-gain candidate pool.
+
 Do not claim:
 
 - universal APFD superiority;
@@ -146,6 +152,7 @@ Baselines:
 - `additional`;
 - `static_shapley`;
 - `shaptcp`;
+- `guarded_shaptcp`;
 - `cost_additional`;
 - `cost_shaptcp`.
 
@@ -165,6 +172,8 @@ Expected signal:
 - ShapTCP should reduce redundancy against `static_shapley`;
 - ShapTCP should improve rare recall against `additional`;
 - ShapTCP may not beat `additional` on APFD.
+- Guarded ShapTCP should recover more of `additional`'s first-rank stability
+  than pure ShapTCP while keeping lower redundancy.
 
 Claim boundary:
 
@@ -204,6 +213,8 @@ Baselines:
 - `additional coverage`;
 - `static_shapley`, ablation;
 - `shaptcp`.
+- `guarded_shaptcp`, candidate main method after representation-sensitivity
+  diagnosis.
 
 Metrics:
 
@@ -241,6 +252,16 @@ Success criterion for the first paper:
   or not materially below, `additional`;
 - rare_recall@k and redundancy@k improve consistently;
 - runtime overhead is small relative to data preparation.
+
+Guarded trade-off analysis:
+
+- run `lambda_max in {0.0, 0.05, 0.1, 0.2, 0.3, 0.5, 1.0}` with
+  `lambda_min=0` and `gamma=1`;
+- treat `lambda_max=0.0` as the pure additional endpoint;
+- report APFD/Recall@k versus Redundancy@k to identify whether there is a
+  low-redundancy region without material early-detection loss;
+- keep pure `shaptcp` as a mechanism ablation, not automatically as the main
+  paper algorithm.
 
 Runner:
 

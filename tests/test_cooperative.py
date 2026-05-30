@@ -6,6 +6,7 @@ from shaptcp import (
     additional_coverage_order,
     apfd,
     fault_recall_at_k,
+    guarded_shaptcp_order,
     rare_fault_recall_at_k,
     redundancy_at_k,
     shaptcp_order,
@@ -82,6 +83,41 @@ class CooperativeTests(unittest.TestCase):
         }
 
         self.assertEqual(additional_coverage_order(matrix), ("A", "C", "B"))
+
+    def test_guarded_shaptcp_zero_relaxation_matches_additional(self):
+        matrix = {
+            "A": {"f1", "f2", "f3"},
+            "B": {"f1", "f2", "f3"},
+            "C": {"f4"},
+            "D": {"f5"},
+        }
+
+        guarded = guarded_shaptcp_order(matrix, lambda_max=0.0).order
+
+        self.assertEqual(guarded, additional_coverage_order(matrix))
+
+    def test_guarded_shaptcp_uses_scarcity_inside_near_best_pool(self):
+        matrix = {
+            "A": {"common1", "common2", "common3"},
+            "B": {"common1", "common2", "shared_tail"},
+            "C": {"rare"},
+            "D": {"shared_tail"},
+        }
+
+        guarded = guarded_shaptcp_order(matrix, lambda_max=0.5).order
+
+        self.assertEqual(guarded[0], "A")
+        self.assertEqual(guarded[1], "C")
+        self.assertEqual(additional_coverage_order(matrix)[1], "B")
+
+    def test_guarded_shaptcp_rejects_invalid_relaxation_parameters(self):
+        matrix = {"A": {"f1"}}
+
+        with self.assertRaises(ValueError):
+            guarded_shaptcp_order(matrix, lambda_min=0.3, lambda_max=0.2)
+
+        with self.assertRaises(ValueError):
+            guarded_shaptcp_order(matrix, gamma=0.0)
 
     def test_static_shapley_order_is_non_residual_ablation(self):
         matrix = {

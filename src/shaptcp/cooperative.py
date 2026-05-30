@@ -216,10 +216,143 @@ def shaptcp_order(
     return OrderResult(order=tuple(order), static_scores=static_scores, traces=tuple(traces))
 
 
+def guarded_shaptcp_order(
+    test_to_faults: Mapping[TestId, Iterable[FaultId]],
+    *,
+    budget_count: int | None = None,
+    durations: Mapping[TestId, float] | None = None,
+    time_budget: float | None = None,
+    fault_weights: Mapping[FaultId, float] | None = None,
+    lambda_min: float = 0.0,
+    lambda_max: float = 0.2,
+    gamma: float = 1.0,
+) -> OrderResult:
+    """Order tests by additional coverage guarded with Shapley scarcity.
+
+    At each step, the method first computes the best residual coverage count
+    ``a*(S)``. It then admits only tests within a dynamically relaxed
+    near-best additional-coverage pool:
+
+        a_i(S) >= (1 - lambda_t) * a*(S)
+
+    Shapley scarcity is used only inside that pool. This keeps the primary
+    first-rank stability signal from classic additional coverage while still
+    allowing scarcity-aware redundancy reduction among near-equivalent choices.
+    """
+
+    if budget_count is None and time_budget is None:
+        budget_count = len(test_to_faults)
+    if budget_count is not None and budget_count < 0:
+        raise ValueError("budget_count must be non-negative")
+    if time_budget is not None and time_budget < 0:
+        raise ValueError("time_budget must be non-negative")
+    if not 0 <= lambda_min <= lambda_max <= 1:
+        raise ValueError("lambda_min and lambda_max must satisfy 0 <= lambda_min <= lambda_max <= 1")
+    if gamma <= 0:
+        raise ValueError("gamma must be positive")
+
+    normalized = normalize_matrix(test_to_faults)
+    uses_durations = bool(durations) or time_budget is not None
+    if uses_durations:
+        costs = normalize_durations(durations or {}, normalized, context="durations")
+    else:
+        costs = {test: 1.0 for test in normalized}
+    weights = _normalize_fault_weights(fault_weights)
+    degrees = fault_degrees(normalized)
+    static_scores = static_shapley_scores(normalized, fault_weights=weights)
+
+    remaining_tests = set(normalized)
+    covered_faults: set[FaultId] = set()
+    total_faults = all_faults(normalized)
+    order: list[TestId] = []
+    traces: list[StepTrace] = []
+    cumulative_time = 0.0
+    initial_best_gain: int | None = None
+
+    while remaining_tests:
+        if budget_count is not None and len(order) >= budget_count:
+            break
+
+        feasible: list[tuple[TestId, set[FaultId], int, float]] = []
+        for test in sorted(remaining_tests, key=str):
+            duration = costs[test]
+            if time_budget is not None and cumulative_time + duration > time_budget:
+                continue
+            newly_covered = normalized[test] - covered_faults
+            additional_gain = len(newly_covered)
+            scarcity_score = sum(float(weights.get(fault, 1.0)) / degrees[fault] for fault in newly_covered)
+            feasible.append((test, newly_covered, additional_gain, scarcity_score))
+
+        if not feasible:
+            break
+
+        best_gain = max(gain for _, _, gain, _ in feasible)
+        if initial_best_gain is None:
+            initial_best_gain = best_gain
+
+        lambda_t = _guard_lambda(
+            best_gain=best_gain,
+            initial_best_gain=initial_best_gain,
+            lambda_min=lambda_min,
+            lambda_max=lambda_max,
+            gamma=gamma,
+        )
+        if lambda_t == 0:
+            best_test, best_new, _, best_scarcity = max(
+                feasible,
+                key=lambda item: (item[2], len(normalized[item[0]]), _reverse_sort_key(item[0])),
+            )
+        else:
+            threshold = (1.0 - lambda_t) * best_gain
+            pool = [
+                (test, newly_covered, gain, scarcity)
+                for test, newly_covered, gain, scarcity in feasible
+                if gain >= threshold
+            ]
+            best_test, best_new, _, best_scarcity = max(
+                pool,
+                key=lambda item: (item[3], float(item[2]), _reverse_sort_key(item[0])),
+            )
+
+        remaining_tests.remove(best_test)
+        order.append(best_test)
+        covered_faults.update(best_new)
+        cumulative_time += costs[best_test]
+        traces.append(
+            StepTrace(
+                test=best_test,
+                raw_score=best_scarcity,
+                adjusted_score=best_scarcity,
+                newly_covered_faults=frozenset(best_new),
+                cumulative_time=cumulative_time,
+                covered_fault_count=len(covered_faults),
+                residual_fault_count=len(total_faults - covered_faults),
+            )
+        )
+
+    return OrderResult(order=tuple(order), static_scores=static_scores, traces=tuple(traces))
+
+
 def _reverse_sort_key(value: TestId) -> str:
     """Make deterministic max() tie-breaking prefer lexical ascending ids."""
 
     return "".join(chr(255 - ord(ch)) for ch in str(value))
+
+
+def _guard_lambda(
+    *,
+    best_gain: int,
+    initial_best_gain: int,
+    lambda_min: float,
+    lambda_max: float,
+    gamma: float,
+) -> float:
+    if initial_best_gain <= 0:
+        progress = 1.0
+    else:
+        progress = 1.0 - (best_gain / initial_best_gain)
+    progress = min(max(progress, 0.0), 1.0)
+    return lambda_min + (lambda_max - lambda_min) * (progress**gamma)
 
 
 def _normalize_fault_weights(fault_weights: Mapping[FaultId, float] | None) -> dict[FaultId, float]:

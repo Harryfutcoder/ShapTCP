@@ -17,6 +17,7 @@ from shaptcp import (
     apfdc,
     cost_aware_additional_coverage_order,
     fault_recall_at_k,
+    guarded_shaptcp_order,
     load_binary_incidence_matrix,
     rare_fault_recall_at_k,
     redundancy_at_k,
@@ -34,6 +35,9 @@ def main() -> None:
     parser.add_argument("--k", type=int, default=10, help="Prefix length for recall/redundancy metrics.")
     parser.add_argument("--budget-count", type=int, help="Optional top-k execution budget.")
     parser.add_argument("--time-budget", type=float, help="Optional time budget for cost-aware methods.")
+    parser.add_argument("--guard-lambda-min", type=float, default=0.0)
+    parser.add_argument("--guard-lambda-max", type=float, default=0.2)
+    parser.add_argument("--guard-gamma", type=float, default=1.0)
     args = parser.parse_args()
 
     dataset = load_binary_incidence_matrix(args.matrix)
@@ -60,6 +64,15 @@ def main() -> None:
             budget_count=args.budget_count,
             durations=durations,
             time_budget=args.time_budget,
+        ).order,
+        "guarded_shaptcp": guarded_shaptcp_order(
+            dataset.test_to_faults,
+            budget_count=args.budget_count,
+            durations=durations,
+            time_budget=args.time_budget,
+            lambda_min=args.guard_lambda_min,
+            lambda_max=args.guard_lambda_max,
+            gamma=args.guard_gamma,
         ).order,
     }
 

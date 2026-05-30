@@ -13,6 +13,7 @@ from shaptcp import (
     apfdc,
     cost_aware_additional_coverage_order,
     fault_recall_at_k,
+    guarded_shaptcp_order,
     load_binary_incidence_matrix,
     random_order,
     rare_fault_recall_at_k,
@@ -51,6 +52,9 @@ def main() -> None:
     parser.add_argument("--k", type=int, default=20)
     parser.add_argument("--budget-count", type=int)
     parser.add_argument("--random-seeds", type=int, default=30)
+    parser.add_argument("--guard-lambda-min", type=float, default=0.0)
+    parser.add_argument("--guard-lambda-max", type=float, default=0.2)
+    parser.add_argument("--guard-gamma", type=float, default=1.0)
     args = parser.parse_args()
     if args.semantics == "unverified" and not args.allow_unverified:
         raise SystemExit("Refusing to run with --semantics unverified. Pass a verified value or --allow-unverified.")
@@ -64,7 +68,15 @@ def main() -> None:
     fault_ids = load_id_file(args.fault_ids) if args.fault_ids else load_optional_sidecar(args.matrix, ".entities")
     dataset = load_binary_incidence_matrix(args.matrix, test_ids=test_ids, fault_ids=fault_ids)
     durations = load_durations(args.durations) if args.durations else {}
-    orders = build_orders(dataset.test_to_faults, durations, args.budget_count, args.random_seeds)
+    orders = build_orders(
+        dataset.test_to_faults,
+        durations,
+        args.budget_count,
+        args.random_seeds,
+        args.guard_lambda_min,
+        args.guard_lambda_max,
+        args.guard_gamma,
+    )
     apfd_allowed = args.allow_diagnostic_apfd or reportable_apfd_scope(args.semantics, args.ground_truth_level)
 
     writer = csv.writer(sys.stdout)
@@ -85,6 +97,9 @@ def main() -> None:
             "budget_policy",
             "budget_count",
             "random_seeds",
+            "guard_lambda_min",
+            "guard_lambda_max",
+            "guard_gamma",
             "method",
             "random_seed",
             "selected",
@@ -121,6 +136,9 @@ def main() -> None:
                 budget_policy,
                 "" if args.budget_count is None else str(args.budget_count),
                 str(args.random_seeds),
+                fmt(args.guard_lambda_min),
+                fmt(args.guard_lambda_max),
+                fmt(args.guard_gamma),
                 method_name,
                 random_seed,
                 str(len(order)),
@@ -133,12 +151,27 @@ def main() -> None:
         )
 
 
-def build_orders(test_to_faults, durations, budget_count: int | None, random_seeds: int):
+def build_orders(
+    test_to_faults,
+    durations,
+    budget_count: int | None,
+    random_seeds: int,
+    guard_lambda_min: float,
+    guard_lambda_max: float,
+    guard_gamma: float,
+):
     orders = {
         "total": clip(total_coverage_order(test_to_faults), budget_count),
         "additional": additional_coverage_order(test_to_faults, budget_count=budget_count),
         "static_shapley": clip(static_shapley_order(test_to_faults), budget_count),
         "shaptcp": shaptcp_order(test_to_faults, budget_count=budget_count).order,
+        "guarded_shaptcp": guarded_shaptcp_order(
+            test_to_faults,
+            budget_count=budget_count,
+            lambda_min=guard_lambda_min,
+            lambda_max=guard_lambda_max,
+            gamma=guard_gamma,
+        ).order,
     }
     for seed in range(random_seeds):
         orders[f"random_{seed}"] = clip(random_order(test_to_faults, seed=seed), budget_count)
