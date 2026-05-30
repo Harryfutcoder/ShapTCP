@@ -74,8 +74,9 @@ Target benchmarks:
 
 - `OCP`: artifact already includes code, subject packages, result tables, and
   Java prioritizers that read dense coverage matrices.
-- `FAST`: repository source has been identified; write the pickle/input loader
-  and confirm row/column direction before paper use.
+- `FAST`: C-subject fault-matrix loader is implemented; Java schema is
+  documented but should be treated separately because it maps bug/version ids
+  to triggering tests.
 - `SIR`: use only after object package format and access/license constraints
   are recorded.
 
@@ -87,6 +88,42 @@ PYTHONPATH=src python3 scripts/discover_matrices.py "$SHAPTCP_OCP_ROOT" --scan-z
 ```
 
 If a candidate matrix is inside a zip, extract only that confirmed member:
+
+FAST C-subject fault-matrix smoke:
+
+```bash
+export SHAPTCP_FAST_ROOT="$PWD/data/raw/FAST"
+
+PYTHONPATH=src python3 scripts/convert_fast_fault_matrix.py \
+  --fast-root "$SHAPTCP_FAST_ROOT" \
+  --subject flex_v3 \
+  --entity line \
+  --output data/processed/fast/flex_v3_faults.txt
+
+mkdir -p outputs/fast-flex_v3-core
+
+PYTHONPATH=src python3 scripts/run_benchmark_matrix.py \
+  data/processed/fast/flex_v3_faults.txt \
+  --test-ids data/processed/fast/flex_v3_faults.txt.tests \
+  --fault-ids data/processed/fast/flex_v3_faults.txt.entities \
+  --benchmark FAST \
+  --subject flex_v3_faults \
+  --semantics fault \
+  --evidence-level pipeline_validation \
+  --claim-scope fast_c_fault_matrix_core_baselines \
+  --source-status source-audited \
+  --matrix-status verified \
+  --result-status local_smoke_only \
+  --ground-truth-level true_fault \
+  --duration-source not_available \
+  --k 20 \
+  --random-seeds 30 \
+  > outputs/fast-flex_v3-core/results.csv
+```
+
+Repeat for `grep_v3`, `gzip_v1`, `make_v1`, and `sed_v6` before summarizing.
+These runs compare only local core baselines; artifact-native FAST variants
+remain a separate stronger-baseline stage.
 
 ```bash
 PYTHONPATH=src python3 scripts/extract_zip_member.py \

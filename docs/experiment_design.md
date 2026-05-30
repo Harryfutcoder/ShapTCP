@@ -193,7 +193,7 @@ Datasets:
 |---|---|---|---|
 | P0 | SIR small subjects | fault or coverage matrix, if exposed/generated | source access still needed |
 | P1 | OCP | coverage/mutation artifact; raw matrix path still unconfirmed | source audited, not matrix-ready |
-| P2 | FAST | fault matrix and coverage/black-box representations, after source checkout | source audited; write loader and confirm key/value direction |
+| P2 | FAST | C fault matrix and coverage/black-box representations | C fault loader implemented; Java bug/version schema must stay separate |
 | P3 | Defects4J trigger metadata | per-bug trigger-test metadata across separate buggy revisions | adapter smoke only, not a standard multi-fault TCP instance |
 
 Baselines:
